@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ローソク足特訓＋ゆるデモトレード</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+    .app { max-width: 1120px; margin: 0 auto; padding: 24px; }
+    .card { background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    h2 { margin: 0 0 16px; }
+    .sub { color: #6b7280; line-height: 1.6; }
+    .chart { width: 100%; height: 440px; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; margin: 18px 0; }
+    .simple-chart { height: 260px; }
+    .mini { font-size: 14px; color: #6b7280; line-height: 1.7; }
+    .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .cta-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    button, .link-button { border: none; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: bold; cursor: pointer; background: #e5e7eb; text-align: center; text-decoration: none; color: #111827; display: block; }
+    button:hover, .link-button:hover { background: #d1d5db; }
+    .buy { background: #dcfce7; }
+    .wait { background: #e0f2fe; }
+    .sell { background: #fee2e2; }
+    .next { background: #111827; color: white; width: 100%; margin-top: 16px; }
+    .ghost { background: #f3f4f6; width: 100%; margin-top: 12px; }
+    .cta { background: #f97316; color: white; }
+    .result { font-size: 17px; line-height: 1.75; background: #f9fafb; padding: 16px; border-radius: 14px; display: none; }
+    .score { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }
+    .score-box { background: #f9fafb; border-radius: 14px; padding: 14px; text-align: center; }
+    .score-box b { display: block; font-size: 21px; margin-top: 6px; }
+    .badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #e5e7eb; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
+    .good { color: #059669; font-weight: bold; }
+    .bad { color: #dc2626; font-weight: bold; }
+    .notice { background: #fff7ed; border: 1px solid #fed7aa; padding: 14px; border-radius: 14px; line-height: 1.6; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .info { background: #f9fafb; border-radius: 14px; padding: 12px; }
+    .info span { display: block; color: #6b7280; font-size: 13px; margin-bottom: 4px; }
+    .hidden { display: none; }
+    @media (max-width: 800px) { .buttons, .score, .info-grid, .cta-buttons { grid-template-columns: 1fr; } h1 { font-size: 26px; } .chart { height: 360px; } .simple-chart { height: 250px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <span class="badge" id="modeBadge">STEP1：ローソク足10問</span>
+      <h1 id="mainTitle">勝てる形を見つけるローソク足特訓</h1>
+      <p class="sub" id="mainSub">まずは先ほどの画像に近いローソク足パターンを10問。ここで「買ってよさそうな形」を体感してから、ゆるめのデモトレードへ進みます。</p>
+      <div class="score">
+        <div class="score-box">資金<b><span id="cash">300,000</span>円</b></div>
+        <div class="score-box">勝敗<b><span id="wins">0</span>勝 <span id="losses">0</span>敗</b></div>
+        <div class="score-box">判断数<b><span id="total">0</span>回</b></div>
+        <div class="score-box">正答率<b><span id="rate">0</span>%</b></div>
+        <div class="score-box">現在<b><span id="stageNow">1</span>/<span id="stageMax">10</span></b></div>
+      </div>
+    </div>
+
+    <div id="patternArea">
+      <div class="card">
+        <h2 id="patternQuestion">このローソク足、どう判断する？</h2>
+        <svg id="patternChart" class="chart simple-chart" viewBox="0 0 700 260"></svg>
+        <p class="mini">最初は簡単めです。目的は「勝ちやすそうな形」を目で覚えることです。</p>
+        <div class="buttons">
+          <button class="buy" onclick="answerPattern('buy')">買い</button>
+          <button class="wait" onclick="answerPattern('wait')">見送り</button>
+          <button class="sell" onclick="answerPattern('sell')">売り・警戒</button>
+        </div>
+      </div>
+      <div class="card result" id="patternResult"></div>
+      <button class="next" onclick="nextPattern()">次の問題へ</button>
+    </div>
+
+    <div id="demoArea" class="hidden">
+      <div class="card">
+        <h2 id="question">この銘柄、エントリーする？</h2>
+        <div class="info-grid">
+          <div class="info"><span>売買株数</span>100株固定</div>
+          <div class="info"><span>売買期間</span>2週間くらい</div>
+          <div class="info"><span>難易度</span>ゆるめ・勝ち体験重視</div>
+          <div class="info"><span>見るポイント</span>5日線・25日線・出来高</div>
+        </div>
+        <svg id="chart" class="chart" viewBox="0 0 1000 440"></svg>
+        <p class="mini">線の意味：青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。</p>
+        <div class="buttons">
+          <button class="buy" onclick="makeDecision('buy')">100株買う</button>
+          <button class="wait" onclick="makeDecision('wait')">見送る</button>
+          <button class="sell" onclick="makeDecision('sell')">売り・警戒</button>
+        </div>
+      </div>
+      <div class="card result" id="result"></div>
+      <button class="next" onclick="nextTrade()">次のチャートへ</button>
+    </div>
+
+    <div id="ctaArea" class="hidden">
+      <div class="card">
+        <span class="badge">NEXT STEP</span>
+        <h1>ここから実際のチャートで練習してみよう</h1>
+        <p class="sub">デモで「買うタイミング」「見送るタイミング」の感覚がつかめたら、次は証券口座のチャート機能やデモ取引で練習できます。</p>
+        <div class="cta-buttons">
+          <a class="link-button cta" href="https://www.google.com/search?q=%E8%A8%BC%E5%88%B8%E5%8F%A3%E5%BA%A7+%E9%96%8B%E8%A8%AD+%E6%AF%94%E8%BC%83" target="_blank">証券口座を比較してみる</a>
+          <button class="link-button" onclick="resetAll()">もう一度練習する</button>
+        </div>
+        <p class="mini">※実際の投資は元本割れのリスクがあります。最初は少額・デモ取引・勉強目的から始めるのがおすすめです。</p>
+      </div>
+    </div>
+
+    <button class="ghost" onclick="resetAll()">最初からやり直す</button>
+
+    <div class="card notice">
+      <b>このアプリの狙い：</b>初心者が「株ってこうやってタイミングを見るんだ」と実感できるように、難しすぎない設定にしています。実際の投資では、出来高、支持線、抵抗線、損切り位置、決算予定も確認してください。
+    </div>
+  </div>
+
+<script>
+const patternQuestions = [
+  { name:'赤三兵', answer:'buy', text:'陽線が3本続く強い形。上昇の勢いがあり、買い候補。', candles:[[40,58,62,36],[57,72,76,54],[71,88,92,68]] },
+  { name:'三川明けの明星', answer:'buy', text:'下落後の反転サイン。大陽線で切り返しており買い候補。', candles:[[88,48,92,45],[45,47,52,40],[49,78,82,47]] },
+  { name:'上放れたすき', answer:'buy', text:'上昇中に窓を開けて強い形。上昇継続を狙いやすい。', candles:[[38,52,55,36],[53,66,69,51],[78,92,95,76],[93,86,96,84]] },
+  { name:'上昇三角型', answer:'buy', text:'高値がそろい、安値が切り上がる形。上抜け期待の買い候補。', candles:[[45,55,58,42],[55,50,59,48],[51,60,62,50],[60,56,63,54],[57,68,72,56]] },
+  { name:'押し目反発', answer:'buy', text:'上昇後に少し下げて、再び陽線。初心者にもわかりやすい買い形。', candles:[[42,55,57,40],[55,68,70,54],[68,62,69,60],[62,74,78,61]] },
+  { name:'かぶせ線', answer:'sell', text:'上昇後に大陰線がかぶさる形。買いは危険、警戒。', candles:[[46,80,84,44],[86,55,89,52]] },
+  { name:'首吊り線', answer:'sell', text:'高値圏で長い下ヒゲ。反落警戒で買いは見送り。', candles:[[42,55,58,40],[55,70,73,54],[72,74,78,43]] },
+  { name:'三尊', answer:'sell', text:'天井型。右肩後に崩れる可能性があり、買いは危険。', candles:[[42,58,62,40],[58,75,78,55],[75,55,77,53],[55,92,98,54],[92,58,95,55],[58,72,75,56],[72,48,74,44]] },
+  { name:'レンジ中央', answer:'wait', text:'方向感が弱い。買うにも売るにも中途半端なので見送り。', candles:[[55,62,65,53],[62,56,64,54],[56,63,66,55],[63,58,65,56],[58,61,64,57]] },
+  { name:'下落途中の小反発', answer:'wait', text:'少し反発しても下落の流れが続いている。反転確認まで見送り。', candles:[[90,78,92,76],[78,68,80,66],[68,60,70,58],[60,64,66,57]] }
+];
+
+const scenarios = [
+  { name:'かんたんブレイク成功型', seed:1, trend:0.55, volatility:1.8, setup:'breakout', correct:'buy', entry:1000, stop:970, target:1060, future:[1015,1030,1045,1060,1075,1090,1085,1100,1120,1130], reason:'抵抗線を上抜け、5日線も25日線の上。出来高も増えていて、初心者でも買いやすい形。' },
+  { name:'押し目から反発型', seed:2, trend:0.38, volatility:1.7, setup:'pullback', correct:'buy', entry:1200, stop:1164, target:1270, future:[1215,1230,1245,1270,1290,1280,1305,1320,1330,1340], reason:'上昇中に軽く押して、再び反発。損切りも近く、100株なら練習しやすい。' },
+  { name:'出来高つき上抜け型', seed:3, trend:0.35, volatility:1.8, setup:'volumeBreak', correct:'buy', entry:820, stop:795, target:880, future:[835,850,865,880,900,915,905,930,940,950], reason:'出来高を伴ってもみ合いを突破。大口が入りそうな雰囲気があり、勝ち体験を作りやすい形。' },
+  { name:'下落中で危険型', seed:4, trend:-0.32, volatility:1.9, setup:'down', correct:'wait', entry:900, stop:873, target:960, future:[890,875,860,845,835,850,840,825,815,820], reason:'25日線が下向きで、株価も線の下。反発が弱く、買わない判断が正解。' },
+  { name:'高値つかみ注意型', seed:5, trend:0.45, volatility:2.0, setup:'top', correct:'sell', entry:1500, stop:1545, target:1600, future:[1480,1460,1435,1410,1395,1405,1380,1360,1375,1350], reason:'上昇後に失速。高値で出来高が増えたあと下げており、買いは危険。' },
+  { name:'レンジ中央で見送り型', seed:6, trend:0.04, volatility:1.4, setup:'range', correct:'wait', entry:980, stop:951, target:1040, future:[985,990,975,995,1000,990,985,1005,995,1000], reason:'チャートの真ん中で方向感が弱い。勝ちやすい場所ではないので見送り。' },
+  { name:'再ブレイク型', seed:7, trend:0.42, volatility:1.6, setup:'breakout', correct:'buy', entry:760, stop:737, target:815, future:[770,785,800,815,830,845,840,855,870,880], reason:'いったん横ばい後に再び上抜け。5日線も上向きで、流れに乗りやすい。' },
+  { name:'25日線反発型', seed:8, trend:0.30, volatility:1.5, setup:'pullback', correct:'buy', entry:1350, stop:1310, target:1420, future:[1365,1380,1400,1420,1445,1460,1450,1470,1490,1505], reason:'25日線付近で下げ止まり、陽線で反発。押し目買いの練習にちょうど良い形。' },
+  { name:'弱い戻り型', seed:9, trend:-0.25, volatility:1.8, setup:'down', correct:'wait', entry:700, stop:679, target:750, future:[695,685,675,665,655,670,660,650,645,640], reason:'戻しているように見えても、全体は下向き。勝ちやすい形ではないため見送り。' },
+  { name:'最後の成功ブレイク型', seed:10, trend:0.48, volatility:1.6, setup:'volumeBreak', correct:'buy', entry:1100, stop:1067, target:1170, future:[1120,1140,1155,1170,1190,1210,1200,1225,1240,1260], reason:'出来高増加＋移動平均線上向き＋上抜け。最後は気持ちよく勝ちやすい設定。' }
+];
+
+let stage='pattern';
+let patternIndex=0, tradeIndex=0;
+let cash=300000, wins=0, losses=0, total=0, correctCount=0, answered=false;
+let currentData=null;
+
+function rng(seed){ let x=Math.sin(seed)*10000; return x-Math.floor(x); }
+function money(n){ return Math.round(n).toLocaleString(); }
+function updateScore(){
+  document.getElementById('cash').textContent=money(cash);
+  document.getElementById('wins').textContent=wins;
+  document.getElementById('losses').textContent=losses;
+  document.getElementById('total').textContent=total;
+  document.getElementById('rate').textContent=total?Math.round(correctCount/total*100):0;
+  document.getElementById('stageNow').textContent=stage==='pattern'?patternIndex+1:tradeIndex+1;
+  document.getElementById('stageMax').textContent=stage==='pattern'?patternQuestions.length:scenarios.length;
+}
+
+function drawSimpleChart(){
+  const p=patternQuestions[patternIndex];
+  const svg=document.getElementById('patternChart'); svg.innerHTML='';
+  const W=700,H=260,top=22,left=70;
+  [60,120,180,230].forEach(y=>line(svg,30,y,W-30,y,'#e5e7eb',1));
+  const gap=360/Math.max(1,p.candles.length-1);
+  p.candles.forEach((c,i)=>{
+    const [o,close,h,l]=c, x=left+i*gap, y=v=>230-v*2;
+    const color=close>=o?'#10b981':'#ef4444';
+    line(svg,x,y(h),x,y(l),color,4);
+    rect(svg,x-16,Math.min(y(o),y(close)),32,Math.max(7,Math.abs(y(o)-y(close))),color,1);
+  });
+}
+function loadPattern(){
+  answered=false; stage='pattern'; updateScore();
+  const p=patternQuestions[patternIndex];
+  document.getElementById('modeBadge').textContent='STEP1：ローソク足10問';
+  document.getElementById('mainTitle').textContent='勝てる形を見つけるローソク足特訓';
+  document.getElementById('mainSub').textContent='まずは画像に近いローソク足パターンを10問。ここで「買ってよさそうな形」を目で覚えます。';
+  document.getElementById('patternQuestion').textContent=`問題${patternIndex+1}：${p.name}っぽい形。どう判断する？`;
+  document.getElementById('patternResult').style.display='none';
+  drawSimpleChart();
+}
+function answerPattern(choice){
+  if(answered)return; answered=true;
+  const p=patternQuestions[patternIndex]; total++;
+  const ok=choice===p.answer; if(ok)correctCount++;
+  updateScore();
+  const r=document.getElementById('patternResult'); r.style.display='block';
+  r.innerHTML=`<h2>${ok?'<span class="good">正解！いい判断です。</span>':'<span class="bad">惜しい！でも練習なのでOK。</span>'}</h2><p><b>正解：</b>${label(p.answer)}</p><p><b>解説：</b>${p.text}</p>`;
+}
+function nextPattern(){
+  if(patternIndex>=patternQuestions.length-1){ startDemo(); return; }
+  patternIndex++; loadPattern();
+}
+function startDemo(){
+  stage='demo';
+  document.getElementById('patternArea').classList.add('hidden');
+  document.getElementById('demoArea').classList.remove('hidden');
+  document.getElementById('modeBadge').textContent='STEP2：ゆるデモトレード10問';
+  document.getElementById('mainTitle').textContent='100株固定のデモトレード';
+  document.getElementById('mainSub').textContent='ここからは3か月くらいの日足チャートで判断します。難しすぎない設定で、勝てる感覚をつかむ練習です。';
+  loadTrade();
+}
+function makePrices(s){
+  let price=s.entry-90; const arr=[];
+  for(let i=0;i<60;i++){
+    let drift=s.trend;
+    if(s.setup==='range') drift=Math.sin(i/5)*0.12;
+    if(s.setup==='top'&&i>46) drift=-0.75;
+    if((s.setup==='breakout'||s.setup==='volumeBreak')&&i>50) drift=1.05;
+    if(s.setup==='pullback'&&i>43&&i<52) drift=-0.35;
+    if(s.setup==='pullback'&&i>=52) drift=0.95;
+    price+=drift*4+(rng(s.seed*100+i)-0.5)*s.volatility*5;
+    const open=price+(rng(s.seed*200+i)-0.5)*8;
+    const close=price+(rng(s.seed*300+i)-0.5)*8;
+    const high=Math.max(open,close)+rng(s.seed*400+i)*12;
+    const low=Math.min(open,close)-rng(s.seed*500+i)*12;
+    let volume=800+rng(s.seed*600+i)*500;
+    if((s.setup==='breakout'||s.setup==='volumeBreak')&&i>51) volume*=2.6;
+    if(s.setup==='top'&&i>45) volume*=2.2;
+    arr.push({open,close,high,low,volume});
+  }
+  const scale=s.entry/arr[59].close;
+  arr.forEach(d=>{d.open*=scale;d.close*=scale;d.high*=scale;d.low*=scale;});
+  return arr;
+}
+function ma(data,period){return data.map((_,i)=>{if(i<period-1)return null;let sum=0;for(let j=i-period+1;j<=i;j++)sum+=data[j].close;return sum/period;});}
+function drawChart(showFuture=false){
+  const s=scenarios[tradeIndex];
+  const data=showFuture?currentData.concat(s.future.map((p,i)=>({open:i?s.future[i-1]:s.entry,close:p,high:Math.max(i?s.future[i-1]:s.entry,p)+10,low:Math.min(i?s.future[i-1]:s.entry,p)-10,volume:1200+rng(i+s.seed)*800}))):currentData;
+  const svg=document.getElementById('chart'); svg.innerHTML='';
+  const W=1000,top=24,chartH=300,volTop=340,volH=70,left=56,right=24;
+  const minP=Math.min(...data.map(d=>d.low)), maxP=Math.max(...data.map(d=>d.high)), maxV=Math.max(...data.map(d=>d.volume));
+  const xStep=(W-left-right)/(data.length-1), y=p=>top+(maxP-p)/(maxP-minP)*chartH, x=i=>left+i*xStep;
+  for(let k=0;k<5;k++){const yy=top+k*(chartH/4);line(svg,left,yy,W-right,yy,'#e5e7eb',1);text(svg,8,yy+4,Math.round(maxP-k*(maxP-minP)/4)+'円','#6b7280',12);}
+  drawMA(ma(data,5),'#2563eb'); drawMA(ma(data,25),'#f97316');
+  data.forEach((d,i)=>{const color=d.close>=d.open?'#10b981':'#ef4444',cx=x(i),bodyW=Math.max(3,xStep*0.55);line(svg,cx,y(d.high),cx,y(d.low),color,1.8);rect(svg,cx-bodyW/2,Math.min(y(d.open),y(d.close)),bodyW,Math.max(2,Math.abs(y(d.open)-y(d.close))),color,1);const vh=d.volume/maxV*volH;rect(svg,cx-bodyW/2,volTop+volH-vh,bodyW,vh,color,0.45);});
+  const judgeX=x(59); line(svg,judgeX,top,judgeX,volTop+volH,'#dc2626',2); text(svg,judgeX-26,18,'判断日','#dc2626',13); text(svg,left,430,'青：5日線　橙：25日線　下：出来高','#374151',13);
+  function drawMA(vals,color){let path='';vals.forEach((v,i)=>{if(v===null)return;path+=(path?' L':'M')+x(i)+' '+y(v);});const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',path);p.setAttribute('fill','none');p.setAttribute('stroke',color);p.setAttribute('stroke-width','2.4');svg.appendChild(p);}
+}
+function loadTrade(){
+  answered=false; stage='demo'; updateScore();
+  const s=scenarios[tradeIndex]; currentData=makePrices(s);
+  document.getElementById('question').textContent=`デモ${tradeIndex+1}：${s.name}　右端でどうする？`;
+  document.getElementById('result').style.display='none'; drawChart(false);
+}
+function makeDecision(choice){
+  if(answered)return; answered=true;
+  const s=scenarios[tradeIndex]; total++;
+  const ok=choice===s.correct; if(ok)correctCount++;
+  let tradeText='';
+  if(choice==='buy'){
+    const shares=100;
+    let exit=s.future[s.future.length-1], exitReason='10営業日後に決済';
+    for(const p of s.future){ if(p<=s.stop){exit=s.stop;exitReason='損切り';break;} if(p>=s.target){exit=s.target;exitReason='利確';break;} }
+    const profit=shares*(exit-s.entry); cash+=profit;
+    if(profit>0)wins++; else losses++;
+    tradeText=`<p><b>売買結果：</b>100株を${s.entry}円で購入 → ${exit}円で${exitReason}</p><p><b>損益：</b><span class="${profit>=0?'good':'bad'}">${profit>=0?'+':''}${money(profit)}円</span></p>`;
+  } else {
+    if(s.correct==='buy') losses++; else wins++;
+    tradeText=`<p><b>売買結果：</b>エントリーなし。資金は変化なし。</p>`;
+  }
+  updateScore(); drawChart(true);
+  const r=document.getElementById('result'); r.style.display='block';
+  r.innerHTML=`<h2>${ok?'<span class="good">ナイス判断！</span>':'<span class="bad">惜しい！次で取り返そう。</span>'}</h2><p><b>あなたの判断：</b>${label(choice)}</p><p><b>おすすめ判断：</b>${label(s.correct)}</p>${tradeText}<p><b>解説：</b>${s.reason}</p><p><b>想定：</b>エントリー ${s.entry}円 / 損切り ${s.stop}円 / 利確目標 ${s.target}円</p>`;
+}
+function nextTrade(){
+  tradeIndex++;
+  if(tradeIndex>=scenarios.length){showCta();return;}
+  loadTrade();
+}
+function showCta(){
+  document.getElementById('demoArea').classList.add('hidden');
+  document.getElementById('ctaArea').classList.remove('hidden');
+  document.getElementById('modeBadge').textContent='FINISH：練習完了';
+  document.getElementById('mainTitle').textContent='お疲れさまでした。次は実際のチャートへ';
+  document.getElementById('mainSub').textContent=`最終資金は${money(cash)}円、勝敗は${wins}勝${losses}敗でした。まずは証券会社のチャートやデモ取引で、少額から感覚を磨いていきましょう。`;
+  updateScore();
+}
+function resetAll(){
+  stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+  document.getElementById('patternArea').classList.remove('hidden');
+  document.getElementById('demoArea').classList.add('hidden');
+  document.getElementById('ctaArea').classList.add('hidden');
+  loadPattern();
+}
+function label(v){return v==='buy'?'買い':v==='sell'?'売り・警戒':'見送り';}
+function line(svg,x1,y1,x2,y2,c,w){const el=document.createElementNS('http://www.w3.org/2000/svg','line');el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);el.setAttribute('stroke',c);el.setAttribute('stroke-width',w);el.setAttribute('stroke-linecap','round');svg.appendChild(el);}
+function rect(svg,x,y,w,h,c,op=1){const el=document.createElementNS('http://www.w3.org/2000/svg','rect');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('width',w);el.setAttribute('height',h);el.setAttribute('fill',c);el.setAttribute('opacity',op);el.setAttribute('rx',2);svg.appendChild(el);}
+function text(svg,x,y,t,c,s){const el=document.createElementNS('http://www.w3.org/2000/svg','text');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('fill',c);el.setAttribute('font-size',s);el.textContent=t;svg.appendChild(el);}
+
+loadPattern();
+</script>
+</body>
+</html>
