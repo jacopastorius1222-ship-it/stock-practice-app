@@ -60,9 +60,9 @@
         <svg id="patternChart" class="chart simple-chart" viewBox="0 0 700 260"></svg>
         <p class="mini">最初は簡単めです。目的は「勝ちやすそうな形」を目で覚えることです。</p>
         <div class="buttons">
-          <button class="buy" onclick="answerPattern('buy')">買い</button>
-          <button class="wait" onclick="answerPattern('wait')">見送り</button>
-          <button class="sell" onclick="answerPattern('sell')">売り・警戒</button>
+          <button class="buy" onclick="answerPattern('buy')">上がる</button>
+　　　　　 <button class="wait" onclick="answerPattern('wait')">わからない</button>
+          <button class="sell" onclick="answerPattern('sell')">下がる</button>
         </div>
       </div>
       <div class="card result" id="patternResult"></div>
@@ -81,9 +81,9 @@
         <svg id="chart" class="chart" viewBox="0 0 1000 440"></svg>
         <p class="mini">線の意味：青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。</p>
         <div class="buttons">
-          <button class="buy" onclick="makeDecision('buy')">100株買う</button>
-          <button class="wait" onclick="makeDecision('wait')">見送る</button>
-          <button class="sell" onclick="makeDecision('sell')">売り・警戒</button>
+          <button class="buy" onclick="makeDecision('buy')">上がると思う</button>
+          <button class="wait" onclick="makeDecision('wait')">わからない</button>
+          <button class="sell" onclick="makeDecision('sell')">下がると思う</button>
         </div>
       </div>
       <div class="card result" id="result"></div>
@@ -281,7 +281,13 @@ function resetAll(){
   document.getElementById('ctaArea').classList.add('hidden');
   loadPattern();
 }
-function label(v){return v==='buy'?'買い':v==='sell'?'売り・警戒':'見送り';}
+function label(v){
+  return v==='buy'
+    ? '上がる'
+    : v==='sell'
+    ? '下がる'
+    : 'わからない';
+}
 function line(svg,x1,y1,x2,y2,c,w){const el=document.createElementNS('http://www.w3.org/2000/svg','line');el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);el.setAttribute('stroke',c);el.setAttribute('stroke-width',w);el.setAttribute('stroke-linecap','round');svg.appendChild(el);}
 function rect(svg,x,y,w,h,c,op=1){const el=document.createElementNS('http://www.w3.org/2000/svg','rect');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('width',w);el.setAttribute('height',h);el.setAttribute('fill',c);el.setAttribute('opacity',op);el.setAttribute('rx',2);svg.appendChild(el);}
 function text(svg,x,y,t,c,s){const el=document.createElementNS('http://www.w3.org/2000/svg','text');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('fill',c);el.setAttribute('font-size',s);el.textContent=t;svg.appendChild(el);}
