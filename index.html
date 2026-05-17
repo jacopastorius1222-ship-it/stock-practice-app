@@ -39,157 +39,115 @@ button:hover, .link-button:hover { background: #d1d5db; }
 .hidden { display: none; }
 @media (max-width: 800px) { .buttons, .score, .info-grid, .cta-buttons { grid-template-columns: 1fr; } h1 { font-size: 26px; } .chart { height: 360px; } .simple-chart { height: 250px; } }
 
-/* NEXT STEP 3カード表示 */
-.next-step-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-top: 28px;
+/* NEXT STEP：300×250バナー3つ横並び */
+.fixed-banners{
+  display:flex;
+  gap:24px;
+  justify-content:center;
+  align-items:stretch;
+  flex-wrap:wrap;
+  margin-top:30px;
 }
 
-.next-card {
-  min-height: 520px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 28px;
-  padding: 32px 26px;
-  text-align: center;
-  text-decoration: none;
-  color: #111827;
-  box-shadow: 0 10px 28px rgba(0,0,0,0.07);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  cursor: pointer;
-  font-family: Arial, sans-serif;
+.banner-box{
+  width:300px;
+  height:250px;
+  overflow:hidden;
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  flex:0 0 300px;
 }
 
-.next-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 18px 38px rgba(0,0,0,0.12);
-  background: #ffffff;
+.banner-box img{
+  display:block;
 }
 
-.next-icon {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 18px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 54px;
+.tracking-pixel{
+  position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  pointer-events:none;
 }
 
-.affiliate-icon {
-  background: #dcfce7;
-  overflow: hidden;
+.custom-banner{
+  width:300px;
+  height:250px;
+  box-sizing:border-box;
+  border:none;
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  padding:24px;
+  text-align:center;
+  text-decoration:none;
+  color:#111827;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  transition:0.2s;
+  cursor:pointer;
+  flex:0 0 300px;
+  font-family:Arial, sans-serif;
 }
 
-.note-icon {
-  background: #fef3c7;
+.custom-banner:hover,
+.banner-box:hover{
+  transform:translateY(-5px);
 }
 
-.training-icon {
-  background: #fee2e2;
+.note-banner{
+  background:#fff8dc;
 }
 
-.affiliate-ad-img {
-  width: 100%;
-  max-width: 150px;
-  height: auto;
-  border-radius: 14px;
-  display: block;
+.train-banner{
+  background:#fff1f2;
 }
 
-.card-label {
-  display: inline-block;
-  margin: 0 auto 18px;
-  padding: 8px 22px;
-  border-radius: 999px;
-  font-size: 15px;
-  font-weight: bold;
+.banner-icon{
+  font-size:50px;
+  line-height:1;
 }
 
-.label-green {
-  background: #059669;
-  color: #ffffff;
+.custom-banner h3{
+  font-size:24px;
+  margin:0;
 }
 
-.label-yellow {
-  background: #facc15;
-  color: #111827;
+.custom-banner p{
+  font-size:14px;
+  line-height:1.6;
+  color:#6b7280;
+  margin:0;
 }
 
-.label-red {
-  background: #ef4444;
-  color: #ffffff;
+.banner-button{
+  padding:12px;
+  border-radius:14px;
+  font-weight:bold;
+  font-size:17px;
 }
 
-.next-card h3 {
-  font-size: 28px;
-  margin: 10px 0 10px;
-  line-height: 1.35;
+.yellow-btn{
+  background:#facc15;
+  color:#111827;
 }
 
-.next-card-line {
-  width: 42px;
-  height: 3px;
-  border-radius: 999px;
-  margin: 10px auto 24px;
+.red-btn{
+  background:#ef4444;
+  color:#fff;
 }
 
-.line-green { background: #059669; }
-.line-yellow { background: #facc15; }
-.line-red { background: #ef4444; }
-
-.next-card p {
-  color: #374151;
-  line-height: 1.8;
-  font-size: 16px;
-  margin: 0;
-  min-height: 92px;
+.cta-risk{
+  text-align:center;
+  margin-top:26px;
 }
 
-.next-button {
-  width: 100%;
-  margin-top: auto;
-  padding: 18px 14px;
-  border-radius: 18px;
-  font-weight: bold;
-  font-size: 22px;
-  box-sizing: border-box;
-}
-
-.green-btn {
-  background: #059669;
-  color: #ffffff;
-}
-
-.yellow-btn {
-  background: #facc15;
-  color: #111827;
-}
-
-.red-btn {
-  background: #ef4444;
-  color: #ffffff;
-}
-
-.cta-risk {
-  text-align: center;
-  margin-top: 26px;
-}
-
-@media (max-width: 900px) {
-  .next-step-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .next-card {
-    min-height: auto;
+@media (max-width:1000px){
+  .fixed-banners{
+    flex-direction:column;
+    align-items:center;
   }
 }
 
@@ -252,74 +210,45 @@ button:hover, .link-button:hover { background: #d1d5db; }
 <h1>お疲れさまでした！次は目的に合わせて進もう</h1>
 <p class="sub" id="finalMessage">まずは自分の温度感に合わせて、次の一歩を選んでください。</p>
 
-<div class="next-step-cards">
+<div class="fixed-banners">
 
-  <!-- 1. アフィリエイト -->
-  <a class="next-card matsui-card"
-     href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP"
-     target="_blank"
-     rel="nofollow sponsored noopener">
-
-    <div class="next-icon affiliate-icon">
-      <img class="affiliate-ad-img"
-           border="0"
+  <!-- 1. 松井証券：A8指定バナー -->
+  <div class="banner-box">
+    <a href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP"
+       rel="nofollow"
+       target="_blank">
+      <img border="0"
            width="300"
            height="250"
            alt=""
            src="https://www20.a8.net/svt/bgt?aid=260511516269&wid=004&eno=01&mid=s00000018318001086000&mc=1">
-    </div>
-
-    <img border="0"
+    </a>
+    <img class="tracking-pixel"
+         border="0"
          width="1"
          height="1"
          src="https://www10.a8.net/0.gif?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP"
-         alt=""
-         style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
+         alt="">
+  </div>
 
-    <div class="card-label label-green">アフィリエイト</div>
-
-    <h3>松井証券で見てみる</h3>
-    <div class="next-card-line line-green"></div>
-
-    <p>口座開設や取引ツールを確認して、実際の相場を見てみたい人向け</p>
-
-    <div class="next-button green-btn">詳しく見る →</div>
-  </a>
-
-
-  <!-- 2. note -->
-  <a class="next-card note-card"
+  <!-- 2. note：300×250 -->
+  <a class="custom-banner note-banner"
      href="https://note.com/route_365jp"
      target="_blank"
      rel="noopener">
-
-    <div class="next-icon note-icon">📚</div>
-
-    <div class="card-label label-yellow">note</div>
-
-    <h3>noteで学ぶ</h3>
-    <div class="next-card-line line-yellow"></div>
-
-    <p>メンタル・大口・負けやすい場面など、もっと深く学びたい人向け</p>
-
-    <div class="next-button yellow-btn">noteを開く →</div>
+    <div class="banner-icon">📚</div>
+    <h3>noteで深く学ぶ</h3>
+    <p>メンタル・大口・負けやすい場面を深く学びたい人向け</p>
+    <div class="banner-button yellow-btn">noteを見る →</div>
   </a>
 
-
-  <!-- 3. さらに特訓 -->
-  <button class="next-card training-card"
+  <!-- 3. さらに特訓：300×250 -->
+  <button class="custom-banner train-banner"
           onclick="resetAll()">
-
-    <div class="next-icon training-icon">🔥</div>
-
-    <div class="card-label label-red">さらに特訓する</div>
-
+    <div class="banner-icon">🔥</div>
     <h3>さらに特訓する</h3>
-    <div class="next-card-line line-red"></div>
-
-    <p>もう一度ランダム問題で練習して、判断力をさらにアップしたい人向け</p>
-
-    <div class="next-button red-btn">特訓を始める →</div>
+    <p>ランダム問題で何度も練習したい人向け</p>
+    <div class="banner-button red-btn">特訓スタート →</div>
   </button>
 
 </div>
