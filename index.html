@@ -497,7 +497,7 @@ tradeIndex=scenarios.length-1;
 document.getElementById('demoArea').classList.add('hidden');
 document.getElementById('ctaArea').classList.remove('hidden');
 document.getElementById('modeBadge').textContent='FINISH：練習完了';
-document.getElementById('mainTitle').textContent='お疲れさまでした。次は目的に合わせて進もう';
+document.getElementById('mainTitle').textContent='';
 document.getElementById('mainSub').textContent=`最終資金は${money(cash)}円、勝敗は${wins}勝${losses}敗でした。初心者は証券口座、もっと極めたい人はnote、何度も練習したい人はさらに特訓へ。`;
 document.getElementById('finalMessage').textContent=`判断正答率は${total?Math.round(correctCount/total*100):0}%でした。あなたの目的に合わせて次の一歩を選んでください。`;
 updateScore();
