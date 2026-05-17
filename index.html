@@ -151,6 +151,90 @@ button:hover, .link-button:hover { background: #d1d5db; }
   }
 }
 
+/* 進化版：復習・80%限定・note人気記事 */
+.mode-panel{
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:18px;
+  margin-top:22px;
+}
+.mode-panel h2{ margin:0 0 8px; }
+.mode-panel p{ margin:0; color:#6b7280; line-height:1.7; }
+.special-box{
+  margin-top:22px;
+  padding:20px;
+  border-radius:20px;
+  background:#ecfdf5;
+  border:1px solid #a7f3d0;
+  text-align:center;
+}
+.special-box.locked{
+  background:#fff7ed;
+  border-color:#fed7aa;
+}
+.review-actions{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+.action-btn{
+  border:none;
+  border-radius:14px;
+  padding:14px 18px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+}
+.review-btn{ background:#111827; color:#fff; }
+.practice-btn{ background:#10b981; color:#fff; }
+.article-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:16px;
+}
+.article-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:16px;
+  text-decoration:none;
+  color:#111827;
+  box-shadow:0 4px 14px rgba(0,0,0,0.05);
+}
+.article-card b{ display:block; margin-bottom:8px; }
+.article-card span{ color:#6b7280; font-size:13px; line-height:1.6; }
+@media (max-width:800px){
+  .article-grid{ grid-template-columns:1fr; }
+}
+
+
+/* 実践プレミアムモード：黒ベース＋価格帯別出来高 */
+.premium-chart{
+  background:#0f172a !important;
+  border:1px solid #334155 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+.premium-caption{
+  background:#0f172a;
+  color:#e5e7eb;
+  border-radius:14px;
+  padding:12px 14px;
+  border:1px solid #334155;
+}
+.premium-caption b{ color:#facc15; }
+.article-help{
+  margin-top:14px;
+  font-size:13px;
+  color:#6b7280;
+  line-height:1.7;
+}
+
 </style>
 </head>
 <body>
@@ -193,7 +277,7 @@ button:hover, .link-button:hover { background: #d1d5db; }
 <div class="info"><span>見るポイント</span>5日線・25日線・出来高</div>
 </div>
 <svg id="chart" class="chart" viewBox="0 0 1000 440"></svg>
-<p class="mini">青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。</p>
+<p class="mini" id="chartCaption">青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。</p>
 <div class="buttons">
 <button class="buy" onclick="makeDecision('buy')">上がると思う</button>
 <button class="wait" onclick="makeDecision('wait')">わからない</button>
@@ -253,6 +337,16 @@ button:hover, .link-button:hover { background: #d1d5db; }
 
 </div>
 
+<div id="reviewPanel" class="mode-panel"></div>
+<div id="specialPanel" class="special-box"></div>
+
+<div class="mode-panel">
+  <h2>note人気記事ピックアップ</h2>
+  <p>練習後に読みたくなるnote記事を表示します。</p>
+  <div id="noteArticles" class="article-grid"></div>
+  
+</div>
+
 <p class="mini cta-risk">
 ※実際の投資は元本割れのリスクがあります。最初は少額・勉強目的から始めるのがおすすめです。
 </p>
@@ -260,10 +354,9 @@ button:hover, .link-button:hover { background: #d1d5db; }
 </div>
 </div>
 
-<button class="ghost" onclick="resetAll()">最初からやり直す</button>
 
 <div class="card notice">
-<b>このアプリの狙い：</b>初心者が「株ってこうやってタイミングを見るんだ」と実感できるように、難しすぎない設定にしています。実際の投資では、出来高、支持線、抵抗線、損切り位置、決算予定、他にも多数のことを確認してください。
+<b>このアプリの狙い：</b>初心者が「株ってこうやってタイミングを見るんだ」と実感できるように、難しすぎない設定にしています。実際の投資では、出来高、支持線、抵抗線、損切り位置、決算予定などなど、確認しましょう！
 </div>
 </div>
 
@@ -329,11 +422,21 @@ const ALL_SCENARIOS = [
 { name:'長期横ばい型', seed:24, trend:0.02, volatility:1.2, setup:'range', correct:'wait', entry:1100, stop:1067, target:1170, future:[1095,1105,1110,1100,1090,1105,1115,1100,1095,1110], reason:'長く横ばいで方向感がない。上にも下にも決めつけにくい。' }
 ];
 
+
+const NOTE_ARTICLES = [
+  { title:'利益は小さく、損失は大きくなってしまう理由', desc:'損大利小を防ぐための考え方を整理。', url:'https://note.com/route_365jp/n/nf84e87473203' },
+  { title:'株初心者が負けやすい場面と対策', desc:'焦り・飛び乗り・損切り遅れを防ぐ実践メモ。', url:'https://note.com/route_365jp/n/n2a0b964e6be7' }
+];
+
 let patternQuestions = [];
 let scenarios = [];
 let stage='pattern';
 let patternIndex=0, tradeIndex=0;
 let cash=300000, wins=0, losses=0, total=0, correctCount=0, answered=false;
+let missedPatternQuestions = [];
+let missedScenarios = [];
+let reviewMode = false;
+let realChartMode = false;
 let currentData=null;
 
 function rng(seed){ let x=Math.sin(seed)*10000; return x-Math.floor(x); }
@@ -390,9 +493,9 @@ rect(svg,x-16,Math.min(y(o),y(close)),32,Math.max(7,Math.abs(y(o)-y(close))),col
 function loadPattern(){
 answered=false; stage='pattern'; updateScore();
 const p=patternQuestions[patternIndex];
-document.getElementById('modeBadge').textContent='STEP1：ローソク足10問';
-document.getElementById('mainTitle').textContent='勝てる形を見つけるローソク足特訓';
-document.getElementById('mainSub').textContent='30種類以上のローソク足パターンからランダムで10問出題。何度もやるほど違う問題に出会えます。';
+document.getElementById('modeBadge').textContent=reviewMode?'REVIEW：苦手復習':'STEP1：ローソク足10問';
+document.getElementById('mainTitle').textContent=reviewMode?'苦手パターンだけ復習モード':'勝てる形を見つけるローソク足特訓';
+document.getElementById('mainSub').textContent=reviewMode?'間違えた問題だけを出題します。ここを繰り返すと正答率80％超えを狙いやすくなります。':'30種類以上のローソク足パターンからランダムで10問出題。何度もやるほど違う問題に出会えます。';
 document.getElementById('patternQuestion').textContent=`問題${patternIndex+1}：${p.name}っぽい形。どう判断する？`;
 document.getElementById('patternResult').style.display='none';
 drawSimpleChart();
@@ -400,13 +503,13 @@ drawSimpleChart();
 function answerPattern(choice){
 if(answered)return; answered=true;
 const p=patternQuestions[patternIndex]; total++;
-const ok=choice===p.answer; if(ok)correctCount++;
+const ok=choice===p.answer; if(ok)correctCount++; else if(!reviewMode){ missedPatternQuestions.push(p); }
 updateScore();
 const r=document.getElementById('patternResult'); r.style.display='block';
 r.innerHTML=`<h2>${ok?'<span class="good">正解！いい判断です。</span>':'<span class="bad">惜しい！でも練習なのでOK。</span>'}</h2><p><b>正解：</b>${label(p.answer)}</p><p><b>解説：</b>${p.text}</p>`;
 }
 function nextPattern(){
-if(patternIndex>=patternQuestions.length-1){ startDemo(); return; }
+if(patternIndex>=patternQuestions.length-1){ if(reviewMode && scenarios.length===0){ showCta(); return; } startDemo(); return; }
 patternIndex++; loadPattern();
 }
 function startDemo(){
@@ -414,9 +517,9 @@ stage='demo';
 document.getElementById('patternArea').classList.add('hidden');
 document.getElementById('demoArea').classList.remove('hidden');
 document.getElementById('ctaArea').classList.add('hidden');
-document.getElementById('modeBadge').textContent='STEP2：ゆるデモトレード10問';
-document.getElementById('mainTitle').textContent='100株固定のデモトレード';
-document.getElementById('mainSub').textContent='20種類以上の3か月日足チャートからランダムで10問。難しすぎない設定で、勝てる感覚をつかむ練習です。';
+document.getElementById('modeBadge').textContent=realChartMode?'PREMIUM：実践チャート':(reviewMode?'REVIEW：苦手復習':'STEP2：ゆるデモトレード10問');
+document.getElementById('mainTitle').textContent=realChartMode?'実践プレミアムチャート問題':(reviewMode?'苦手チャートだけ復習モード':'100株固定のデモトレード');
+document.getElementById('mainSub').textContent=realChartMode?'黒背景チャート＋価格帯別出来高つき。より実戦に近い画面で、買い・見送り・下落警戒を判断してみましょう。':(reviewMode?'間違えたチャートだけを出題します。弱点をつぶして80％以上を狙いましょう。':'20種類以上の3か月日足チャートからランダムで10問。難しすぎない設定で、勝てる感覚をつかむ練習です。');
 loadTrade();
 }
 
@@ -451,25 +554,58 @@ function drawChart(showFuture=false){
 const s=scenarios[tradeIndex];
 const data=showFuture?currentData.concat(s.future.map((p,i)=>({open:i?s.future[i-1]:s.entry,close:p,high:Math.max(i?s.future[i-1]:s.entry,p)+10,low:Math.min(i?s.future[i-1]:s.entry,p)-10,volume:1200+rng(i+s.seed)*800}))):currentData;
 const svg=document.getElementById('chart'); svg.innerHTML='';
-const W=1000,top=24,chartH=300,volTop=340,volH=70,left=56,right=24;
+svg.classList.toggle('premium-chart', realChartMode);
+const W=1000,top=24,chartH=300,volTop=340,volH=70,left=56,right=realChartMode?150:24;
+const bg=realChartMode?'#0f172a':'#ffffff';
+const grid=realChartMode?'#334155':'#e5e7eb';
+const textColor=realChartMode?'#cbd5e1':'#6b7280';
+const labelColor=realChartMode?'#e5e7eb':'#374151';
 const minP=Math.min(...data.map(d=>d.low)), maxP=Math.max(...data.map(d=>d.high)), maxV=Math.max(...data.map(d=>d.volume));
 const xStep=(W-left-right)/(data.length-1), y=p=>top+(maxP-p)/(maxP-minP)*chartH, x=i=>left+i*xStep;
-for(let k=0;k<5;k++){const yy=top+k*(chartH/4);line(svg,left,yy,W-right,yy,'#e5e7eb',1);text(svg,8,yy+4,Math.round(maxP-k*(maxP-minP)/4)+'円','#6b7280',12);}
-drawMA(ma(data,5),'#2563eb'); drawMA(ma(data,25),'#f97316');
-data.forEach((d,i)=>{const color=d.close>=d.open?'#10b981':'#ef4444',cx=x(i),bodyW=Math.max(3,xStep*0.55);line(svg,cx,y(d.high),cx,y(d.low),color,1.8);rect(svg,cx-bodyW/2,Math.min(y(d.open),y(d.close)),bodyW,Math.max(2,Math.abs(y(d.open)-y(d.close))),color,1);const vh=d.volume/maxV*volH;rect(svg,cx-bodyW/2,volTop+volH-vh,bodyW,vh,color,0.45);});
-const judgeX=x(59); line(svg,judgeX,top,judgeX,volTop+volH,'#dc2626',2); text(svg,judgeX-26,18,'判断日','#dc2626',13); text(svg,left,430,'青：5日線　橙：25日線　下：出来高','#374151',13);
+rect(svg,0,0,W,440,bg,1);
+for(let k=0;k<5;k++){const yy=top+k*(chartH/4);line(svg,left,yy,W-right,yy,grid,1);text(svg,8,yy+4,Math.round(maxP-k*(maxP-minP)/4)+'円',textColor,12);}
+
+if(realChartMode){
+  drawVolumeProfile();
+  text(svg,W-142,18,'価格帯別出来高', '#facc15', 13);
+}
+
+drawMA(ma(data,5),realChartMode?'#38bdf8':'#2563eb'); drawMA(ma(data,25),realChartMode?'#f59e0b':'#f97316');
+data.forEach((d,i)=>{const color=d.close>=d.open?'#22c55e':'#ef4444',cx=x(i),bodyW=Math.max(3,xStep*0.55);line(svg,cx,y(d.high),cx,y(d.low),color,1.8);rect(svg,cx-bodyW/2,Math.min(y(d.open),y(d.close)),bodyW,Math.max(2,Math.abs(y(d.open)-y(d.close))),color,1);const vh=d.volume/maxV*volH;rect(svg,cx-bodyW/2,volTop+volH-vh,bodyW,vh,color,realChartMode?0.65:0.45);});
+const judgeX=x(59); line(svg,judgeX,top,judgeX,volTop+volH,realChartMode?'#facc15':'#dc2626',2); text(svg,judgeX-26,18,'判断日',realChartMode?'#facc15':'#dc2626',13); text(svg,left,430,realChartMode?'水色：5日線　橙：25日線　右：価格帯別出来高　下：出来高':'青：5日線　橙：25日線　下：出来高',labelColor,13);
 function drawMA(vals,color){let path='';vals.forEach((v,i)=>{if(v===null)return;path+=(path?' L':'M')+x(i)+' '+y(v);});const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',path);p.setAttribute('fill','none');p.setAttribute('stroke',color);p.setAttribute('stroke-width','2.4');svg.appendChild(p);}
+function drawVolumeProfile(){
+  const bins=12;
+  const volumes=Array(bins).fill(0);
+  data.forEach(d=>{
+    const price=(d.high+d.low+d.close)/3;
+    const idx=Math.max(0,Math.min(bins-1,Math.floor((price-minP)/(maxP-minP)*bins)));
+    volumes[idx]+=d.volume;
+  });
+  const maxBin=Math.max(...volumes);
+  const profileX=W-right+14;
+  const profileMaxW=105;
+  for(let i=0;i<bins;i++){
+    const y1=top+chartH-(i+1)*(chartH/bins)+3;
+    const h=(chartH/bins)-6;
+    const w=volumes[i]/maxBin*profileMaxW;
+    rect(svg,profileX,y1,w,h,i===volumes.indexOf(maxBin)?'#facc15':'#64748b',i===volumes.indexOf(maxBin)?0.85:0.55);
+  }
+  text(svg,profileX,top+chartH+18,'厚い価格帯', '#cbd5e1', 12);
+}
 }
 function loadTrade(){
 answered=false; stage='demo'; updateScore();
 const s=scenarios[tradeIndex]; currentData=makePrices(s);
-document.getElementById('question').textContent=`デモ${tradeIndex+1}：${s.name}　右端でどうする？`;
+document.getElementById('question').textContent=realChartMode?`実践プレミアム${tradeIndex+1}：価格帯別出来高も見て、右端でどうする？`:(reviewMode?`復習${tradeIndex+1}：${s.name}　右端でどうする？`:`デモ${tradeIndex+1}：${s.name}　右端でどうする？`);
+document.getElementById('chartCaption').className=realChartMode?'mini premium-caption':'mini';
+document.getElementById('chartCaption').innerHTML=realChartMode?'<b>実践プレミアム：</b>黒背景＋右側に価格帯別出来高を表示。出来高が厚い価格帯は、支持線・抵抗線になりやすい場所として確認します。':'青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。';
 document.getElementById('result').style.display='none'; drawChart(false);
 }
 function makeDecision(choice){
 if(answered)return; answered=true;
 const s=scenarios[tradeIndex]; total++;
-const ok=choice===s.correct; if(ok)correctCount++;
+const ok=choice===s.correct; if(ok)correctCount++; else if(!reviewMode && !realChartMode){ missedScenarios.push(s); }
 let tradeText='';
 if(choice==='buy'){
 const shares=100;
@@ -496,15 +632,94 @@ stage='finish';
 tradeIndex=scenarios.length-1;
 document.getElementById('demoArea').classList.add('hidden');
 document.getElementById('ctaArea').classList.remove('hidden');
-document.getElementById('modeBadge').textContent='FINISH：練習完了';
-document.getElementById('mainTitle').textContent='';
-document.getElementById('mainSub').textContent=`最終資金は${money(cash)}円、勝敗は${wins}勝${losses}敗でした。初心者は証券口座、もっと極めたい人はnote、何度も練習したい人はさらに特訓へ。`;
-document.getElementById('finalMessage').textContent=`判断正答率は${total?Math.round(correctCount/total*100):0}%でした。あなたの目的に合わせて次の一歩を選んでください。`;
+document.getElementById('modeBadge').textContent=reviewMode?'REVIEW：復習完了':(realChartMode?'実践：完了':'FINISH：練習完了');
+document.getElementById('mainTitle').textContent=reviewMode?'復習完了':(realChartMode?'実践プレミアム完了':'練習完了');
+document.getElementById('mainSub').textContent=`最終資金は${money(cash)}円、勝敗は${wins}勝${losses}敗でした。`;
+const rate = total?Math.round(correctCount/total*100):0;
+document.getElementById('finalMessage').textContent=`判断正答率は${rate}%でした。あなたの目的に合わせて次の一歩を選んでください。`;
+renderReviewPanel(rate);
+renderSpecialPanel(rate);
+renderNoteArticles();
 updateScore();
+}
+
+function renderReviewPanel(rate){
+const panel=document.getElementById('reviewPanel');
+const missCount=missedPatternQuestions.length+missedScenarios.length;
+
+if(reviewMode){
+  panel.innerHTML=`<h2>復習モード完了</h2><p>苦手問題をもう一度確認できました。80％以上を狙うなら、通常練習にもう一度チャレンジしてみましょう。</p><div class="review-actions"><button class="action-btn review-btn" onclick="resetAll()">もう一度チャレンジする</button></div>`;
+  return;
+}
+
+if(missCount>0){
+  panel.innerHTML=`<h2>苦手パターンだけ復習できます</h2><p>今回まちがえた問題は${missCount}問です。ここだけ繰り返すと、正答率80％超えを狙いやすくなります。</p><div class="review-actions"><button class="action-btn review-btn" onclick="startReviewMode()">苦手だけ復習する</button></div>`;
+  return;
+}
+
+if(rate>=80){
+  panel.innerHTML=`<h2>苦手問題なし</h2><p>正答率${rate}%です。今回の判断はかなり良いです。次は実践プレミアムチャートで、もう少し本番に近い練習へ進めます。</p>`;
+  return;
+}
+
+panel.innerHTML=`<h2>もう一度チャレンジがおすすめです</h2><p>正答率は${rate}%でした。苦手問題をうまく記録できなかったため、まずは通常練習をもう一度行い、80％以上を目指しましょう。</p><div class="review-actions"><button class="action-btn review-btn" onclick="resetAll()">もう一度チャレンジする</button></div>`;
+}
+
+function renderSpecialPanel(rate){
+const panel=document.getElementById('specialPanel');
+if(rate>=80){
+  panel.className='special-box';
+  panel.innerHTML=`<h2>🎉 正答率80%以上！特別導線を解放しました</h2><p>自信がついてきた方向けに、実践プレミアムチャートへ進めます。</p><div class="review-actions"><button class="action-btn practice-btn" onclick="startRealChartMode()">実践プレミアムへ</button><a class="action-btn review-btn" href="https://note.com/route_365jp" target="_blank" rel="noopener">noteで実践知識を見る</a></div>`;
+}else{
+  panel.className='special-box locked';
+  panel.innerHTML=`<h2>🔒 正答率80%以上で実践プレミアム解放</h2><p>今は${rate}%です。苦手復習を繰り返して、80％以上を目指しましょう。</p>`;
+}
+}
+
+function renderNoteArticles(){
+const box=document.getElementById('noteArticles');
+const picks=shuffleArray(NOTE_ARTICLES).slice(0,3);
+box.innerHTML=picks.map((a,i)=>`<a class="article-card" href="${a.url}" target="_blank" rel="noopener"><b>${i+1}. ${a.title}</b><span>${a.desc}</span></a>`).join('');
+}
+
+function startReviewMode(){
+reviewMode=true;
+realChartMode=false;
+const oldMissPatterns=[...missedPatternQuestions];
+const oldMissScenarios=[...missedScenarios];
+missedPatternQuestions=[];
+missedScenarios=[];
+patternQuestions=oldMissPatterns.length?oldMissPatterns:[];
+scenarios=oldMissScenarios.length?oldMissScenarios:[];
+patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+document.getElementById('ctaArea').classList.add('hidden');
+if(patternQuestions.length>0){
+  document.getElementById('patternArea').classList.remove('hidden');
+  document.getElementById('demoArea').classList.add('hidden');
+  loadPattern();
+}else if(scenarios.length>0){
+  document.getElementById('patternArea').classList.add('hidden');
+  document.getElementById('demoArea').classList.remove('hidden');
+  startDemo();
+}else{
+  resetAll();
+}
+}
+
+function startRealChartMode(){
+reviewMode=false;
+realChartMode=true;
+patternQuestions=[];
+scenarios=pickRandom(ALL_SCENARIOS,5);
+patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+document.getElementById('ctaArea').classList.add('hidden');
+document.getElementById('patternArea').classList.add('hidden');
+document.getElementById('demoArea').classList.remove('hidden');
+startDemo();
 }
 function resetAll(){
 makeNewSet();
-stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; reviewMode=false; realChartMode=false; missedPatternQuestions=[]; missedScenarios=[];
 document.getElementById('patternArea').classList.remove('hidden');
 document.getElementById('demoArea').classList.add('hidden');
 document.getElementById('ctaArea').classList.add('hidden');
