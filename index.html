@@ -1,4 +1,650 @@
-```html
+
+
+
+
+貼り付けられたテキスト（1 点）(1).txt
+ドキュメント
+アフィリエイトリンクを貼ったらうまくできませんでした。
+確認してほしいです。
+
+思考時間: 2 ～ 3 秒
+原因はここです。アフィリエイト広告タグを href="" の中に丸ごと入れている ため、リンクとして壊れています。
+
+
+今のNG部分：
+
+<a class="link-button cta" href="<amp-ad ...></amp-ad>" target="_blank">
+href には URLだけ を入れる必要があります。
+
+修正例：
+
+<a class="link-button cta"
+   href="ここにA8のアフィリエイトURLを貼る"
+   target="_blank"
+   rel="nofollow sponsored noopener">
+  📈 証券口座を見てみる
+</a>
+つまり、A8の管理画面で取得するものは2種類あります。
+
+広告タグ <amp-ad ...> は貼らない。
+貼るのは クリック用URL です。
+
+A8で「広告リンク作成」→「テキスト広告」や「メール用URL」みたいな形式から、https://px.a8.net/... のようなURLだけをコピーして、上の href="" に入れてください。
+
+amp-ad はAMPページ用の広告タグなので、このHTMLアプリ内のボタンリンクには向いていません。
+
+
+コードを修正できるようにしてほしいです。
+・アフィリエイトリンクを貼ります。
+・リンクを貼るページのイメージを変更してほしい。
+　左から松井証券、真ん中note上に松井証券と同じ大きさのアイコン、右にさらに特訓する。これも上にアイコンがつくとなおさら良い。
+
+思考時間: 2 ～ 3 秒
+できます。以下の部分だけ差し替えればOKです。
+ctaArea の中をこのコードに変更してください。
+
+<div id="ctaArea" class="hidden">
+  <div class="card">
+    <span class="badge">NEXT STEP</span>
+    <h1>お疲れさまでした！次は目的に合わせて進もう</h1>
+    <p class="sub" id="finalMessage">まずは自分の温度感に合わせて、次の一歩を選んでください。</p>
+
+    <div class="cta-buttons next-step-cards">
+      <a class="next-card matsui"
+         href="ここに松井証券のアフィリエイトリンクを貼る"
+         target="_blank"
+         rel="nofollow sponsored noopener">
+        <div class="next-icon">📈</div>
+        <h3>松井証券で見てみる</h3>
+        <p>まずは証券口座やチャート機能を確認したい人向け</p>
+      </a>
+
+      <a class="next-card note-card"
+         href="https://note.com/route_365jp"
+         target="_blank"
+         rel="noopener">
+        <div class="next-icon">📚</div>
+        <h3>noteで深く学ぶ</h3>
+        <p>メンタル・大口・負けやすい場面をもっと学びたい人向け</p>
+      </a>
+
+      <button class="next-card training-card" onclick="resetAll()">
+        <div class="next-icon">🔥</div>
+        <h3>さらに特訓する</h3>
+        <p>もう一度ランダム問題で練習したい人向け</p>
+      </button>
+    </div>
+
+    <p class="mini" style="margin-top:18px;">
+      ※実際の投資は元本割れのリスクがあります。最初は少額・勉強目的から始めるのがおすすめです。
+    </p>
+  </div>
+</div>
+さらに、<style> の中にこれを追加してください。
+
+.next-step-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.next-card {
+  border: none;
+  border-radius: 22px;
+  padding: 24px 18px;
+  text-align: center;
+  text-decoration: none;
+  color: #111827;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: block;
+}
+
+.next-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.next-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  background: #f3f4f6;
+}
+
+.next-card h3 {
+  margin: 8px 0;
+  font-size: 20px;
+}
+
+.next-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.matsui .next-icon {
+  background: #dcfce7;
+}
+
+.note-card .next-icon {
+  background: #fef3c7;
+}
+
+.training-card .next-icon {
+  background: #fee2e2;
+}
+
+.training-card {
+  font-family: Arial, sans-serif;
+}
+
+@media (max-width: 800px) {
+  .next-step-cards {
+    grid-template-columns: 1fr;
+  }
+}
+松井証券のリンクはここだけ変更です。
+
+href="ここに松井証券のアフィリエイトリンクを貼る"
+前回は href の中に広告タグを入れていたのが原因です。href にはURLだけ入れてください。元コードではアフィリエイトタグが href 内に入っていました。
+
+
+
+image(15).png
+このようになってしまいます。
+きれいに3つが横並びになるようにしたい。
+「アフィリエイト」「note」「さらに特訓する」
+
+編集
+
+
+
+貼り付けられたテキスト（1 点）(2).txt
+ドキュメント
+そのようなイメージになるようにコードを貼ってください。
+現状のコードを貼ります。
+
+原因わかりました。
+崩れている理由はここです。
+
+href="<a href="https://px.a8.net/...
+つまり、href="" の中にさらに <a> タグを入れてしまっています。
+
+
+その結果、
+
+HTML構造が壊れる
+
+レイアウトが崩れる
+
+文字が右に飛ぶ
+
+状態になっています。
+
+修正版はこれです。
+このまま丸ごと置き換えてください。
+
+<div class="cta-buttons next-step-cards">
+
+  <!-- アフィリエイト -->
+  <a class="next-card matsui"
+     href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP"
+     target="_blank"
+     rel="nofollow sponsored noopener">
+
+    <div class="next-icon">📈</div>
+
+    <div class="card-label green">
+      アフィリエイト
+    </div>
+
+    <h3>松井証券で見てみる</h3>
+
+    <p>
+      まずは証券口座やチャート機能を
+      確認したい人向け
+    </p>
+
+    <div class="next-button green-btn">
+      詳しく見る →
+    </div>
+
+  </a>
+
+
+  <!-- note -->
+  <a class="next-card note-card"
+     href="https://note.com/route_365jp"
+     target="_blank"
+     rel="noopener">
+
+    <div class="next-icon">📚</div>
+
+    <div class="card-label yellow">
+      note
+    </div>
+
+    <h3>noteで学ぶ</h3>
+
+    <p>
+      メンタル・大口・負けやすい場面などを
+      もっと深く学びたい人向け
+    </p>
+
+    <div class="next-button yellow-btn">
+      noteを見る →
+    </div>
+
+  </a>
+
+
+  <!-- 特訓 -->
+  <button class="next-card training-card"
+          onclick="resetAll()">
+
+    <div class="next-icon">🔥</div>
+
+    <div class="card-label red">
+      特訓
+    </div>
+
+    <h3>さらに特訓する</h3>
+
+    <p>
+      もう一度ランダム問題で練習して、
+      判断力をアップしたい人向け
+    </p>
+
+    <div class="next-button red-btn">
+      特訓スタート →
+    </div>
+
+  </button>
+
+</div>
+CSSはこれに変更してください。
+
+.next-step-cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  margin-top:30px;
+}
+
+.next-card{
+  background:#fff;
+  border-radius:28px;
+  padding:38px 28px;
+  text-align:center;
+  text-decoration:none;
+  color:#111827;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  transition:0.2s;
+  border:none;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.next-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 16px 36px rgba(0,0,0,0.12);
+}
+
+.next-icon{
+  width:120px;
+  height:120px;
+  margin:0 auto 20px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:54px;
+}
+
+.matsui .next-icon{
+  background:#dcfce7;
+}
+
+.note-card .next-icon{
+  background:#fef3c7;
+}
+
+.training-card .next-icon{
+  background:#fee2e2;
+}
+
+.card-label{
+  display:inline-block;
+  margin:0 auto 18px;
+  padding:10px 22px;
+  border-radius:999px;
+  font-size:15px;
+  font-weight:bold;
+}
+
+.green{
+  background:#10b981;
+  color:#fff;
+}
+
+.yellow{
+  background:#facc15;
+  color:#111827;
+}
+
+.red{
+  background:#ef4444;
+  color:#fff;
+}
+
+.next-card h3{
+  font-size:22px;
+  margin-bottom:18px;
+}
+
+.next-card p{
+  color:#6b7280;
+  line-height:1.8;
+  font-size:15px;
+  min-height:80px;
+}
+
+.next-button{
+  margin-top:24px;
+  padding:18px;
+  border-radius:18px;
+  font-weight:bold;
+  font-size:20px;
+}
+
+.green-btn{
+  background:#10b981;
+  color:#fff;
+}
+
+.yellow-btn{
+  background:#facc15;
+  color:#111827;
+}
+
+.red-btn{
+  background:#ef4444;
+  color:#fff;
+}
+
+@media (max-width: 900px){
+
+  .next-step-cards{
+    grid-template-columns:1fr;
+  }
+
+}
+これで、
+
+横3列で綺麗に並ぶ
+
+カードサイズ統一
+
+アイコン上配置
+
+ボタン風デザイン
+
+スマホでは縦並び
+
+になります。
+
+
+難しいのでコピペで済むように、すべてのコードを表示してください。
+
+<style>
+
+.next-step-cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  margin-top:30px;
+}
+
+.next-card{
+  background:#fff;
+  border-radius:28px;
+  padding:38px 28px;
+  text-align:center;
+  text-decoration:none;
+  color:#111827;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  transition:0.2s;
+  border:none;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  cursor:pointer;
+}
+
+.next-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 16px 36px rgba(0,0,0,0.12);
+}
+
+.next-icon{
+  width:120px;
+  height:120px;
+  margin:0 auto 20px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:54px;
+}
+
+.matsui .next-icon{
+  background:#dcfce7;
+}
+
+.note-card .next-icon{
+  background:#fef3c7;
+}
+
+.training-card .next-icon{
+  background:#fee2e2;
+}
+
+.card-label{
+  display:inline-block;
+  margin:0 auto 18px;
+  padding:10px 22px;
+  border-radius:999px;
+  font-size:15px;
+  font-weight:bold;
+}
+
+.green{
+  background:#10b981;
+  color:#fff;
+}
+
+.yellow{
+  background:#facc15;
+  color:#111827;
+}
+
+.red{
+  background:#ef4444;
+  color:#fff;
+}
+
+.next-card h3{
+  font-size:22px;
+  margin-bottom:18px;
+}
+
+.next-card p{
+  color:#6b7280;
+  line-height:1.8;
+  font-size:15px;
+  min-height:80px;
+}
+
+.next-button{
+  margin-top:24px;
+  padding:18px;
+  border-radius:18px;
+  font-weight:bold;
+  font-size:20px;
+}
+
+.green-btn{
+  background:#10b981;
+  color:#fff;
+}
+
+.yellow-btn{
+  background:#facc15;
+  color:#111827;
+}
+
+.red-btn{
+  background:#ef4444;
+  color:#fff;
+}
+
+@media (max-width: 900px){
+
+  .next-step-cards{
+    grid-template-columns:1fr;
+  }
+
+}
+
+</style>
+
+
+
+<div id="ctaArea" class="hidden">
+
+  <div class="card">
+
+    <span class="badge">NEXT STEP</span>
+
+    <h1>
+      お疲れさまでした！次は目的に合わせて進もう
+    </h1>
+
+    <p class="sub" id="finalMessage">
+      まずは自分の温度感に合わせて、
+      次の一歩を選んでください。
+    </p>
+
+
+
+    <div class="next-step-cards">
+
+      <!-- アフィリエイト -->
+      <a class="next-card matsui"
+         href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP"
+         target="_blank"
+         rel="nofollow sponsored noopener">
+
+        <div class="next-icon">📈</div>
+
+        <div class="card-label green">
+          アフィリエイト
+        </div>
+
+        <h3>松井証券で見てみる</h3>
+
+        <p>
+          まずは証券口座やチャート機能を
+          確認したい人向け
+        </p>
+
+        <div class="next-button green-btn">
+          詳しく見る →
+        </div>
+
+      </a>
+
+
+
+      <!-- note -->
+      <a class="next-card note-card"
+         href="https://note.com/route_365jp"
+         target="_blank"
+         rel="noopener">
+
+        <div class="next-icon">📚</div>
+
+        <div class="card-label yellow">
+          note
+        </div>
+
+        <h3>noteで学ぶ</h3>
+
+        <p>
+          メンタル・大口・負けやすい場面などを
+          もっと深く学びたい人向け
+        </p>
+
+        <div class="next-button yellow-btn">
+          noteを見る →
+        </div>
+
+      </a>
+
+
+
+      <!-- 特訓 -->
+      <button class="next-card training-card"
+              onclick="resetAll()">
+
+        <div class="next-icon">🔥</div>
+
+        <div class="card-label red">
+          特訓
+        </div>
+
+        <h3>さらに特訓する</h3>
+
+        <p>
+          もう一度ランダム問題で練習して、
+          判断力をアップしたい人向け
+        </p>
+
+        <div class="next-button red-btn">
+          特訓スタート →
+        </div>
+
+      </button>
+
+    </div>
+
+
+
+    <p class="mini" style="margin-top:24px;">
+      ※実際の投資は元本割れのリスクがあります。
+      最初は少額・勉強目的から始めるのがおすすめです。
+    </p>
+
+  </div>
+
+</div>
+これをそのままコピペしてください。
+今の ctaArea 部分を丸ごと削除して、これに置き換えればOKです。
+
+
+ctaAreaがわかりません。すみませんが、すべてにしてください。素人向けです。
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -311,4 +957,176 @@ h1{
 
 </body>
 </html>
-```
+これを全部コピーして、
+HTMLファイルに丸ごと貼り付ければ完成です。
+
+
+.next-card {
+border: none;
+border-radius: 22px;
+padding: 24px 18px;
+text-align: center;
+text-decoration: none;
+color: #111827;
+background: #ffffff;
+box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+cursor: pointer;
+transition: transform 0.15s ease, box-shadow 0.15s ease;
+display: block;
+}
+
+.next-card {
+transform: translateY(-4px);
+box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.next-icon {
+width: 72px;
+height: 72px;
+margin: 0 auto 14px;
+border-radius: 20px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 34px;
+background: #f3f4f6;
+}
+
+.next-card h3 {
+margin: 8px 0;
+font-size: 20px;
+}
+
+.next-card p {
+margin: 0;
+font-size: 14px;
+line-height: 1.6;
+color: #6b7280;
+}
+
+.matsui .next-icon {
+background: #dcfce7;
+}
+
+.note-card .next-icon {
+background: #fef3c7;
+}
+
+.training-card .next-icon {
+background: #fee2e2;
+}
+
+.training-card {
+font-family: Arial, sans-serif;
+}
+
+@media (max-width: 800px) {
+.next-step-cards {
+grid-template-columns: 1fr;
+}
+}
+body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+.app { max-width: 1120px; margin: 0 auto; padding: 24px; }
+.card { background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 18px; }
+h1 { margin: 0 0 8px; font-size: 32px; }
+h2 { margin: 0 0 16px; }
+.sub { color: #6b7280; line-height: 1.6; }
+.chart { width: 100%; height: 440px; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; margin: 18px 0; }
+.simple-chart { height: 260px; }
+.mini { font-size: 14px; color: #6b7280; line-height: 1.7; }
+.buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cta-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+button, .link-button { border: none; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: bold; cursor: pointer; background: #e5e7eb; text-align: center; text-decoration: none; color: #111827; display: block; }
+button, .link-button { background: #d1d5db; }
+.buy { background: #dcfce7; }
+.wait { background: #e0f2fe; }
+.sell { background: #fee2e2; }
+.next { background: #111827; color: white; width: 100%; margin-top: 16px; }
+.ghost { background: #f3f4f6; width: 100%; margin-top: 12px; }
+.cta { background: #f97316; color: white; }
+.note { background: #fef3c7; color: #111827; }
+.result { font-size: 17px; line-height: 1.75; background: #f9fafb; padding: 16px; border-radius: 14px; display: none; }
+.score { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }
+.score-box { background: #f9fafb; border-radius: 14px; padding: 14px; text-align: center; }
+.score-box b { display: block; font-size: 21px; margin-top: 6px; }
+.badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #e5e7eb; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
+.good { color: #059669; font-weight: bold; }
+.bad { color: #dc2626; font-weight: bold; }
+.notice { background: #fff7ed; border: 1px solid #fed7aa; padding: 14px; border-radius: 14px; line-height: 1.6; }
+.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.info { background: #f9fafb; border-radius: 14px; padding: 12px; }
+.info span { display: block; color: #6b7280; font-size: 13px; margin-bottom: 4px; }
+.hidden { display: none; }
+@media (max-width: 800px) { .buttons, .score, .info-grid, .cta-buttons { grid-template-columns: 1fr; } h1 { font-size: 26px; } .chart { height: 360px; } .simple-chart { height: 250px; } }
+
+
+<div id="patternArea">
+  <div class="card">
+    <h2 id="patternQuestion">このローソク足、どう判断する？</h2>
+    <svg id="patternChart" class="chart simple-chart" viewBox="0 0 700 260"></svg>
+    <p class="mini">最初は「当てる」より「形を覚える」が目的です。失敗してもOK。</p>
+    <div class="buttons">
+      <button class="buy" onclick="answerPattern('buy')">上がる</button>
+      <button class="wait" onclick="answerPattern('wait')">わからない</button>
+      <button class="sell" onclick="answerPattern('sell')">下がる</button>
+    </div>
+  </div>
+  <div class="card result" id="patternResult"></div>
+  <button class="next" onclick="nextPattern()">次の問題へ</button>
+</div>
+
+<div id="demoArea" class="hidden">
+  <div class="card">
+    <h2 id="question">この銘柄、エントリーする？</h2>
+    <div class="info-grid">
+      <div class="info"><span>売買株数</span>100株固定</div>
+      <div class="info"><span>売買期間</span>2週間くらい</div>
+      <div class="info"><span>難易度</span>ゆるめ・勝ち体験重視</div>
+      <div class="info"><span>見るポイント</span>5日線・25日線・出来高</div>
+    </div>
+    <svg id="chart" class="chart" viewBox="0 0 1000 440"></svg>
+    <p class="mini">青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。</p>
+    <div class="buttons">
+      <button class="buy" onclick="makeDecision('buy')">上がると思う</button>
+      <button class="wait" onclick="makeDecision('wait')">わからない</button>
+      <button class="sell" onclick="makeDecision('sell')">下がると思う</button>
+    </div>
+  </div>
+  <div class="card result" id="result"></div>
+  <button class="next" onclick="nextTrade()">次のチャートへ</button>
+</div>
+
+<div id="ctaArea" class="hidden">
+<div class="cta-buttons next-step-cards">
+  <a class="next-card matsui"
+     href="<a href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" rel="nofollow">
+
+"
+target="_blank"
+rel="nofollow sponsored noopener">
+📈
+松井証券で見てみる
+まずは証券口座やチャート機能を確認したい人向け
+
+
+  <a class="next-card note-card"
+     href="https://note.com/route_365jp"
+     target="_blank"
+     rel="noopener">
+    <div class="next-icon">📚</div>
+    <h3>noteで深く学ぶ</h3>
+    <p>メンタル・大口・負けやすい場面をもっと学びたい人向け</p>
+  </a>
+
+  <button class="next-card training-card" onclick="resetAll()">
+    <div class="next-icon">🔥</div>
+    <h3>さらに特訓する</h3>
+    <p>もう一度ランダム問題で練習したい人向け</p>
+  </button>
+</div>
+
+<p class="mini" style="margin-top:18px;">
+  ※実際の投資は元本割れのリスクがあります。最初は少額・勉強目的から始めるのがおすすめです。
+</p>
+
+閉じる
