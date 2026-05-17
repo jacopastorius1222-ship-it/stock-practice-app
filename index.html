@@ -5,6 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>株初心者向け ローソク足特訓＋ゆるデモトレード</title>
   <style>
+    .next-step-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.next-card {
+  border: none;
+  border-radius: 22px;
+  padding: 24px 18px;
+  text-align: center;
+  text-decoration: none;
+  color: #111827;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: block;
+}
+
+.next-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.next-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  background: #f3f4f6;
+}
+
+.next-card h3 {
+  margin: 8px 0;
+  font-size: 20px;
+}
+
+.next-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.matsui .next-icon {
+  background: #dcfce7;
+}
+
+.note-card .next-icon {
+  background: #fef3c7;
+}
+
+.training-card .next-icon {
+  background: #fee2e2;
+}
+
+.training-card {
+  font-family: Arial, sans-serif;
+}
+
+@media (max-width: 800px) {
+  .next-step-cards {
+    grid-template-columns: 1fr;
+  }
+}
     body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
     .app { max-width: 1120px; margin: 0 auto; padding: 24px; }
     .card { background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 18px; }
@@ -92,31 +163,44 @@
     </div>
 
     <div id="ctaArea" class="hidden">
-      <div class="card">
-        <span class="badge">NEXT STEP</span>
-        <h1>お疲れさまでした！次は目的に合わせて進もう</h1>
-        <p class="sub" id="finalMessage">まずは自分の温度感に合わせて、次の一歩を選んでください。</p>
-        <div class="cta-buttons">
-          <a class="link-button cta" href="<a href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" rel="nofollow">
+  <div class="card">
+    <span class="badge">NEXT STEP</span>
+    <h1>お疲れさまでした！次は目的に合わせて進もう</h1>
+    <p class="sub" id="finalMessage">まずは自分の温度感に合わせて、次の一歩を選んでください。</p>
+
+    <div class="cta-buttons next-step-cards">
+      <a class="next-card matsui"
+         href="<a href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" rel="nofollow">
 <img border="0" width="300" height="250" alt="" src="https://www28.a8.net/svt/bgt?aid=260511516269&wid=004&eno=01&mid=s00000018318001086000&mc=1"></a>
-<img border="0" width="1" height="1" src="https://www10.a8.net/0.gif?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" alt="">" target="_blank">📈 証券口座を見てみる</a>
-          <button class="link-button" onclick="resetAll()">🔥 さらに特訓する</button>
-          <a class="link-button note" href="https://note.com/route_365jp" target="_blank">📚 noteで深く学ぶ</a>
-        </div>
-        <p class="mini" style="margin-top:18px;">
-          初心者向け：まずは証券会社のチャート機能やデモ感覚で練習。<br>
-          もっと極めたい人向け：noteでは「メンタル」「大口について」「負けやすい場面」などを深く学べます。<br><br>
-          ※実際の投資は元本割れのリスクがあります。最初は少額・勉強目的から始めるのがおすすめです。
-        </p>
-      </div>
+<img border="0" width="1" height="1" src="https://www10.a8.net/0.gif?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" alt="">"
+         target="_blank"
+         rel="nofollow sponsored noopener">
+        <div class="next-icon">📈</div>
+        <h3>松井証券で見てみる</h3>
+        <p>まずは証券口座やチャート機能を確認したい人向け</p>
+      </a>
+
+      <a class="next-card note-card"
+         href="https://note.com/route_365jp"
+         target="_blank"
+         rel="noopener">
+        <div class="next-icon">📚</div>
+        <h3>noteで深く学ぶ</h3>
+        <p>メンタル・大口・負けやすい場面をもっと学びたい人向け</p>
+      </a>
+
+      <button class="next-card training-card" onclick="resetAll()">
+        <div class="next-icon">🔥</div>
+        <h3>さらに特訓する</h3>
+        <p>もう一度ランダム問題で練習したい人向け</p>
+      </button>
     </div>
 
-    <button class="ghost" onclick="resetAll()">最初からやり直す</button>
-
-    <div class="card notice">
-      <b>このアプリの狙い：</b>初心者が「株ってこうやってタイミングを見るんだ」と実感できるように、難しすぎない設定にしています。実際の投資では、出来高、支持線、抵抗線、損切り位置、決算予定など様々な視点で確認してください。
-    </div>
+    <p class="mini" style="margin-top:18px;">
+      ※実際の投資は元本割れのリスクがあります。最初は少額・勉強目的から始めるのがおすすめです。
+    </p>
   </div>
+</div>
 
 <script>
 const ALL_PATTERN_QUESTIONS = [
