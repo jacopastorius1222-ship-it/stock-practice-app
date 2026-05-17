@@ -597,7 +597,7 @@ function drawVolumeProfile(){
 function loadTrade(){
 answered=false; stage='demo'; updateScore();
 const s=scenarios[tradeIndex]; currentData=makePrices(s);
-document.getElementById('question').textContent=realChartMode?`実践プレミアム${tradeIndex+1}：価格帯別出来高も見て、右端でどうする？`:(reviewMode?`復習${tradeIndex+1}：${s.name}　右端でどうする？`:`デモ${tradeIndex+1}：${s.name}　右端でどうする？`);
+document.getElementById('question').textContent=realChartMode?`実践プレミアム${tradeIndex+1}：右端の価格帯別出来高も見て、どう判断する？`:(reviewMode?`復習${tradeIndex+1}：${s.name}　右端でどうする？`:`デモ${tradeIndex+1}：${s.name}　右端でどうする？`);
 document.getElementById('chartCaption').className=realChartMode?'mini premium-caption':'mini';
 document.getElementById('chartCaption').innerHTML=realChartMode?'<b>実践プレミアム：</b>黒背景＋右側に価格帯別出来高を表示。出来高が厚い価格帯は、支持線・抵抗線になりやすい場所として確認します。':'青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。';
 document.getElementById('result').style.display='none'; drawChart(false);
