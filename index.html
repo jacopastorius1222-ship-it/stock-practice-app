@@ -518,7 +518,7 @@ function startDemo(){
 stage='demo';
 document.getElementById('patternArea').classList.add('hidden');
 document.getElementById('demoArea').classList.remove('hidden');
-document.getElementById('ctaArea')window.scrollTo({ top: 0, behavior: 'smooth' });.classList.add('hidden');
+document.getElementById('ctaArea').classList.add('hidden');
 document.getElementById('modeBadge').textContent=realChartMode?'PREMIUM：実践チャート':(reviewMode?'REVIEW：苦手復習':'STEP2：ゆるデモトレード10問');
 document.getElementById('mainTitle').textContent=realChartMode?'実践プレミアムチャート問題':(reviewMode?'苦手チャートだけ復習モード':'100株固定のデモトレード');
 document.getElementById('mainSub').textContent=realChartMode?'黒背景チャート＋価格帯別出来高つき。より実戦に近い画面で、買い・見送り・下落警戒を判断してみましょう。':(reviewMode?'間違えたチャートだけを出題します。弱点をつぶして80％以上を狙いましょう。':'20種類以上の3か月日足チャートからランダムで10問。難しすぎない設定で、勝てる感覚をつかむ練習です。');
@@ -633,7 +633,7 @@ function showCta(){
 stage='finish';
 tradeIndex=scenarios.length-1;
 document.getElementById('demoArea').classList.add('hidden');
-document.getElementById('ctaArea')window.scrollTo({ top: 0, behavior: 'smooth' });.classList.remove('hidden');
+document.getElementById('ctaArea').classList.remove('hidden');
 document.getElementById('modeBadge').textContent=reviewMode?'REVIEW：復習完了':(realChartMode?'実践：完了':'FINISH：練習完了');
 document.getElementById('mainTitle').textContent=reviewMode?'復習完了':(realChartMode?'実践プレミアム完了':'練習完了');
 document.getElementById('mainSub').textContent=`最終資金は${money(cash)}円、勝敗は${wins}勝${losses}敗でした。`;
@@ -694,7 +694,7 @@ missedScenarios=[];
 patternQuestions=oldMissPatterns.length?oldMissPatterns:[];
 scenarios=oldMissScenarios.length?oldMissScenarios:[];
 patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
-document.getElementById('ctaArea')window.scrollTo({ top: 0, behavior: 'smooth' });.classList.add('hidden');
+document.getElementById('ctaArea').classList.add('hidden');
 if(patternQuestions.length>0){
   document.getElementById('patternArea').classList.remove('hidden');
   document.getElementById('demoArea').classList.add('hidden');
@@ -714,7 +714,7 @@ realChartMode=true;
 patternQuestions=[];
 scenarios=pickRandom(ALL_SCENARIOS,5);
 patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
-document.getElementById('ctaArea')window.scrollTo({ top: 0, behavior: 'smooth' });.classList.add('hidden');
+document.getElementById('ctaArea').classList.add('hidden');
 document.getElementById('patternArea').classList.add('hidden');
 document.getElementById('demoArea').classList.remove('hidden');
 startDemo();
@@ -724,7 +724,7 @@ makeNewSet();
 stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; reviewMode=false; realChartMode=false; missedPatternQuestions=[]; missedScenarios=[];
 document.getElementById('patternArea').classList.remove('hidden');
 document.getElementById('demoArea').classList.add('hidden');
-document.getElementById('ctaArea')window.scrollTo({ top: 0, behavior: 'smooth' });.classList.add('hidden');
+document.getElementById('ctaArea').classList.add('hidden');
 loadPattern();
 }
 
