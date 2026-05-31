@@ -14,6 +14,8 @@ h2 { margin: 0 0 16px; }
 .chart { width: 100%; height: 440px; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; margin: 18px 0; }
 .simple-chart { height: 260px; }
 .mini { font-size: 14px; color: #6b7280; line-height: 1.7; }
+.compact-score { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.compact-score span { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 999px; padding: 7px 12px; font-size: 14px; font-weight: bold; }
 .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .cta-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 button, .link-button { border: none; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: bold; cursor: pointer; background: #e5e7eb; text-align: center; text-decoration: none; color: #111827; display: block; }
@@ -29,6 +31,10 @@ button:hover, .link-button:hover { background: #d1d5db; }
 .score { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }
 .score-box { background:#f9fafb; border-radius:14px; padding:2px; text-align:center; }
 .score-box b { display: block; font-size: 21px; margin-top: 6px; }
+.final-score { display: none; }
+.finish-mode .compact-score { display: none; }
+.finish-mode .final-score { display: grid; }
+.practice-card { margin-bottom: 18px; }
 .badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #e5e7eb; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
 .good { color: #059669; font-weight: bold; }
 .bad { color: #dc2626; font-weight: bold; }
@@ -37,8 +43,31 @@ button:hover, .link-button:hover { background: #d1d5db; }
 .info { background: #f9fafb; border-radius: 14px; padding: 12px; }
 .info span { display: block; color: #6b7280; font-size: 13px; margin-bottom: 4px; }
 .hidden { display: none; }
-@media (max-width: 800px) { .buttons, .score{ grid-template-columns: repeat(2,1fr); } .info-grid, .cta-buttons { grid-template-columns: 1fr; } .score-box{
-  min-height:60px;}h1 { font-size: 26px; } .score-box{ padding:4px; } .score-box b{ font-size:16px; } .score-box span{ font-size:12px; } .chart { height: 360px; } .simple-chart { height: 250px; } }
+@media (max-width: 800px) {
+  .app { padding: 10px; }
+  .card { border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  h1 { font-size: 21px; line-height: 1.25; }
+  h2 { font-size: 18px; line-height: 1.35; margin-bottom: 10px; }
+  .sub { font-size: 13px; line-height: 1.5; margin: 0; }
+  .compact-score { margin-top: 10px; }
+  .compact-score span { font-size: 13px; padding: 6px 10px; }
+  .buttons { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .score{ grid-template-columns: repeat(2,1fr); }
+  .info-grid, .cta-buttons { grid-template-columns: 1fr; }
+  button, .link-button { border-radius: 12px; padding: 13px 8px; font-size: 15px; }
+  .next { margin-top: 10px; }
+  .mini { font-size: 12px; line-height: 1.45; margin: 8px 0; }
+  .result { font-size: 14px; line-height: 1.55; padding: 12px; margin-top: 10px; }
+  .result h2 { font-size: 17px; margin-bottom: 6px; }
+  .result p { margin: 6px 0; }
+  .score-box{ min-height:60px; padding:4px; }
+  .score-box b{ font-size:16px; }
+  .score-box span{ font-size:12px; }
+  .chart { height: 280px; margin: 10px 0; }
+  .simple-chart { height: 205px; }
+  .info { padding: 8px; font-size: 13px; }
+  .info-grid { gap: 8px; }
+}
 
 /* NEXT STEP：300×250バナー3つ横並び */
 .fixed-banners{
@@ -244,7 +273,11 @@ button:hover, .link-button:hover { background: #d1d5db; }
 <span class="badge" id="modeBadge">STEP1：ローソク足10問</span>
 <h1 id="mainTitle">勝てる形を見つけるローソク足特訓</h1>
 <p class="sub" id="mainSub">ローソク足パターンをランダムで10問出題します。「上がる・わからない・下がる」を直感で選んで、勝ちやすい形を目で覚えましょう。</p>
-<div class="score">
+<div class="compact-score" id="compactScore">
+<span>現在 <b><span id="compactStageNow">1</span>/<span id="compactStageMax">10</span></b></span>
+<span>正答率 <b><span id="compactRate">0</span>%</b></span>
+</div>
+<div class="score final-score" id="scoreBoard">
 <div class="score-box">資金<b><span id="cash">300,000</span>円</b></div>
 <div class="score-box">勝敗<b><span id="wins">0</span>勝 <span id="losses">0</span>敗</b></div>
 <div class="score-box">判断数<b><span id="total">0</span>回</b></div>
@@ -254,7 +287,7 @@ button:hover, .link-button:hover { background: #d1d5db; }
 </div>
 
 <div id="patternArea">
-<div class="card">
+<div class="card practice-card">
 <h2 id="patternQuestion">このローソク足、どう判断する？</h2>
 <svg id="patternChart" class="chart simple-chart" viewBox="0 0 700 260"></svg>
 <p class="mini">最初は「当てる」より「形を覚える」が目的です。失敗してもOK。</p>
@@ -263,13 +296,13 @@ button:hover, .link-button:hover { background: #d1d5db; }
 <button class="wait" onclick="answerPattern('wait')">わからない</button>
 <button class="sell" onclick="answerPattern('sell')">下がる</button>
 </div>
-</div>
-<div class="card result" id="patternResult"></div>
+<div class="result" id="patternResult"></div>
 <button class="next" onclick="nextPattern()">次の問題へ</button>
+</div>
 </div>
 
 <div id="demoArea" class="hidden">
-<div class="card">
+<div class="card practice-card">
 <h2 id="question">この銘柄、エントリーする？</h2>
 <div class="info-grid">
 <div class="info"><span>売買株数</span>100株固定</div>
@@ -284,9 +317,9 @@ button:hover, .link-button:hover { background: #d1d5db; }
 <button class="wait" onclick="makeDecision('wait')">わからない</button>
 <button class="sell" onclick="makeDecision('sell')">下がると思う</button>
 </div>
-</div>
-<div class="card result" id="result"></div>
+<div class="result" id="result"></div>
 <button class="next" onclick="nextTrade()">次のチャートへ</button>
+</div>
 </div>
 
 <div id="ctaArea" class="hidden">
@@ -458,7 +491,9 @@ document.getElementById('cash').textContent=money(cash);
 document.getElementById('wins').textContent=wins;
 document.getElementById('losses').textContent=losses;
 document.getElementById('total').textContent=total;
-document.getElementById('rate').textContent=total?Math.round(correctCount/total*100):0;
+const rateNow=total?Math.round(correctCount/total*100):0;
+document.getElementById('rate').textContent=rateNow;
+document.getElementById('compactRate').textContent=rateNow;
 
 let now;
 let max;
@@ -473,10 +508,12 @@ if(stage==='pattern'){
 
 document.getElementById('stageNow').textContent=now;
 document.getElementById('stageMax').textContent=max;
+document.getElementById('compactStageNow').textContent=now;
+document.getElementById('compactStageMax').textContent=max;
 }
 function label(v){return v==='buy'?'上がる':v==='sell'?'下がる':'わからない';}
 function scrollToTop(){
-setTimeout(()=>window.scrollTo({top:0,left:0,behavior:'smooth'}),0);
+setTimeout(()=>window.scrollTo({top:0,left:0,behavior:'auto'}),0);
 }
 function line(svg,x1,y1,x2,y2,c,w){const el=document.createElementNS('http://www.w3.org/2000/svg','line');el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);el.setAttribute('stroke',c);el.setAttribute('stroke-width',w);el.setAttribute('stroke-linecap','round');svg.appendChild(el);}
 function rect(svg,x,y,w,h,c,op=1){const el=document.createElementNS('http://www.w3.org/2000/svg','rect');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('width',w);el.setAttribute('height',h);el.setAttribute('fill',c);el.setAttribute('opacity',op);el.setAttribute('rx',2);svg.appendChild(el);}
@@ -496,6 +533,7 @@ rect(svg,x-16,Math.min(y(o),y(close)),32,Math.max(7,Math.abs(y(o)-y(close))),col
 });
 }
 function loadPattern(){
+document.body.classList.remove('finish-mode');
 answered=false; stage='pattern'; updateScore();
 const p=patternQuestions[patternIndex];
 document.getElementById('modeBadge').textContent=reviewMode?'REVIEW：苦手復習':'STEP1：ローソク足10問';
@@ -504,7 +542,7 @@ document.getElementById('mainSub').textContent=reviewMode?'間違えた問題だ
 document.getElementById('patternQuestion').textContent=`問題${patternIndex+1}：${p.name}っぽい形。どう判断する？`;
 document.getElementById('patternResult').style.display='none';
 drawSimpleChart();
-scrollToTop();  
+scrollToTop();
 }
 function answerPattern(choice){
 if(answered)return; answered=true;
@@ -519,6 +557,7 @@ if(patternIndex>=patternQuestions.length-1){ if(reviewMode && scenarios.length==
 patternIndex++; loadPattern();
 }
 function startDemo(){
+document.body.classList.remove('finish-mode');
 stage='demo';
 document.getElementById('patternArea').classList.add('hidden');
 document.getElementById('demoArea').classList.remove('hidden');
@@ -606,7 +645,8 @@ const s=scenarios[tradeIndex]; currentData=makePrices(s);
 document.getElementById('question').textContent=realChartMode?`実践プレミアム${tradeIndex+1}：右端の価格帯別出来高も見て、どう判断する？`:(reviewMode?`復習${tradeIndex+1}：${s.name}　右端でどうする？`:`デモ${tradeIndex+1}：${s.name}　右端でどうする？`);
 document.getElementById('chartCaption').className=realChartMode?'mini premium-caption':'mini';
 document.getElementById('chartCaption').innerHTML=realChartMode?'<b>実践プレミアム：</b>黒背景＋右側に価格帯別出来高を表示。出来高が厚い価格帯は、支持線・抵抗線になりやすい場所として確認します。':'青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。';
-document.getElementById('result').style.display='none'; drawChart(false);scrollToTop();
+document.getElementById('result').style.display='none'; drawChart(false);
+scrollToTop();
 }
 function makeDecision(choice){
 if(answered)return; answered=true;
@@ -634,6 +674,7 @@ if(tradeIndex>=scenarios.length){showCta();return;}
 loadTrade();
 }
 function showCta(){
+document.body.classList.add('finish-mode');
 stage='finish';
 tradeIndex=scenarios.length-1;
 document.getElementById('demoArea').classList.add('hidden');
