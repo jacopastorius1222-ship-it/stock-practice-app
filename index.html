@@ -475,6 +475,9 @@ document.getElementById('stageNow').textContent=now;
 document.getElementById('stageMax').textContent=max;
 }
 function label(v){return v==='buy'?'上がる':v==='sell'?'下がる':'わからない';}
+function scrollToTop(){
+setTimeout(()=>window.scrollTo({top:0,left:0,behavior:'smooth'}),0);
+}
 function line(svg,x1,y1,x2,y2,c,w){const el=document.createElementNS('http://www.w3.org/2000/svg','line');el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);el.setAttribute('stroke',c);el.setAttribute('stroke-width',w);el.setAttribute('stroke-linecap','round');svg.appendChild(el);}
 function rect(svg,x,y,w,h,c,op=1){const el=document.createElementNS('http://www.w3.org/2000/svg','rect');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('width',w);el.setAttribute('height',h);el.setAttribute('fill',c);el.setAttribute('opacity',op);el.setAttribute('rx',2);svg.appendChild(el);}
 function text(svg,x,y,t,c,s){const el=document.createElementNS('http://www.w3.org/2000/svg','text');el.setAttribute('x',x);el.setAttribute('y',y);el.setAttribute('fill',c);el.setAttribute('font-size',s);el.textContent=t;svg.appendChild(el);}
@@ -501,6 +504,7 @@ document.getElementById('mainSub').textContent=reviewMode?'間違えた問題だ
 document.getElementById('patternQuestion').textContent=`問題${patternIndex+1}：${p.name}っぽい形。どう判断する？`;
 document.getElementById('patternResult').style.display='none';
 drawSimpleChart();
+scrollToTop();  
 }
 function answerPattern(choice){
 if(answered)return; answered=true;
@@ -602,7 +606,7 @@ const s=scenarios[tradeIndex]; currentData=makePrices(s);
 document.getElementById('question').textContent=realChartMode?`実践プレミアム${tradeIndex+1}：右端の価格帯別出来高も見て、どう判断する？`:(reviewMode?`復習${tradeIndex+1}：${s.name}　右端でどうする？`:`デモ${tradeIndex+1}：${s.name}　右端でどうする？`);
 document.getElementById('chartCaption').className=realChartMode?'mini premium-caption':'mini';
 document.getElementById('chartCaption').innerHTML=realChartMode?'<b>実践プレミアム：</b>黒背景＋右側に価格帯別出来高を表示。出来高が厚い価格帯は、支持線・抵抗線になりやすい場所として確認します。':'青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。';
-document.getElementById('result').style.display='none'; drawChart(false);
+document.getElementById('result').style.display='none'; drawChart(false);scrollToTop();
 }
 function makeDecision(choice){
 if(answered)return; answered=true;
@@ -643,6 +647,7 @@ renderReviewPanel(rate);
 renderSpecialPanel(rate);
 renderNoteArticles();
 updateScore();
+scrollToTop();
 }
 
 function renderReviewPanel(rate){
