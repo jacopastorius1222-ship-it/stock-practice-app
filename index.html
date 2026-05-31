@@ -51,22 +51,23 @@ button:hover, .link-button:hover { background: #d1d5db; }
   .sub { font-size: 13px; line-height: 1.5; margin: 0; }
   .compact-score { margin-top: 10px; }
   .compact-score span { font-size: 13px; padding: 6px 10px; }
-  .buttons { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .buttons { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
   .score{ grid-template-columns: repeat(2,1fr); }
-  .info-grid, .cta-buttons { grid-template-columns: 1fr; }
-  button, .link-button { border-radius: 12px; padding: 13px 8px; font-size: 15px; }
-  .next { margin-top: 10px; }
-  .mini { font-size: 12px; line-height: 1.45; margin: 8px 0; }
-  .result { font-size: 14px; line-height: 1.55; padding: 12px; margin-top: 10px; }
+  .cta-buttons { grid-template-columns: 1fr; }
+  button, .link-button { border-radius: 12px; padding: 12px 8px; font-size: 15px; }
+  .next { margin-top: 8px; }
+  .mini { font-size: 12px; line-height: 1.4; margin: 6px 0; }
+  .result { font-size: 14px; line-height: 1.5; padding: 10px; margin-top: 8px; }
   .result h2 { font-size: 17px; margin-bottom: 6px; }
   .result p { margin: 6px 0; }
   .score-box{ min-height:60px; padding:4px; }
   .score-box b{ font-size:16px; }
   .score-box span{ font-size:12px; }
-  .chart { height: 280px; margin: 10px 0; }
-  .simple-chart { height: 205px; }
-  .info { padding: 8px; font-size: 13px; }
-  .info-grid { gap: 8px; }
+  .chart { height: 200px; margin: 6px 0; }
+  .simple-chart { height: 135px; }
+  .info-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 6px; }
+  .info { padding: 6px 8px; font-size: 12px; text-align: center; border-radius: 10px; }
+  .info span { display: none; }
 }
 
 /* NEXT STEP：300×250バナー3つ横並び */
@@ -305,10 +306,10 @@ button:hover, .link-button:hover { background: #d1d5db; }
 <div class="card practice-card">
 <h2 id="question">この銘柄、エントリーする？</h2>
 <div class="info-grid">
-<div class="info"><span>売買株数</span>100株固定</div>
-<div class="info"><span>売買期間</span>2週間くらい</div>
-<div class="info"><span>難易度</span>ゆるめ・勝ち体験重視</div>
-<div class="info"><span>見るポイント</span>5日線・25日線・出来高</div>
+<div class="info"><span>売買株数</span>100株</div>
+<div class="info"><span>売買期間</span>6か月</div>
+<div class="info"><span>難易度</span>初心者向け</div>
+<div class="info"><span>見るポイント</span>出来高・支持線</div>
 </div>
 <svg id="chart" class="chart" viewBox="0 0 1000 440"></svg>
 <p class="mini" id="chartCaption">青＝5日移動平均線 / オレンジ＝25日移動平均線 / 下の棒＝出来高。右端の赤い縦線が「判断日」です。</p>
@@ -564,7 +565,7 @@ document.getElementById('demoArea').classList.remove('hidden');
 document.getElementById('ctaArea').classList.add('hidden');
 document.getElementById('modeBadge').textContent=realChartMode?'PREMIUM：実践チャート':(reviewMode?'REVIEW：苦手復習':'STEP2：ゆるデモトレード10問');
 document.getElementById('mainTitle').textContent=realChartMode?'実践プレミアムチャート問題':(reviewMode?'苦手チャートだけ復習モード':'100株固定のデモトレード');
-document.getElementById('mainSub').textContent=realChartMode?'黒背景チャート＋価格帯別出来高つき。より実戦に近い画面で、買い・見送り・下落警戒を判断してみましょう。':(reviewMode?'間違えたチャートだけを出題します。弱点をつぶして80％以上を狙いましょう。':'20種類以上の3か月日足チャートからランダムで10問。難しすぎない設定で、勝てる感覚をつかむ練習です。');
+document.getElementById('mainSub').textContent=realChartMode?'黒背景チャート＋価格帯別出来高つき。より実戦に近い画面で、買い・見送り・下落警戒を判断してみましょう。':(reviewMode?'間違えたチャートだけを出題します。弱点をつぶして80％以上を狙いましょう。':'20種類以上の6か月想定チャートからランダムで10問。難しすぎない設定で、勝てる感覚をつかむ練習です。');
 loadTrade();
 }
 
