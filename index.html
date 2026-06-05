@@ -152,12 +152,13 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 16px;
   margin-bottom: 12px;
-  text-align: center;
 }
-.affiliate-label { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
-.affiliate-inner { display: flex; justify-content: center; }
+.affiliate-label { font-size: 12px; color: var(--text3); margin-bottom: 10px; text-align: center; }
+.affiliate-inner { display: block; border-radius: var(--radius-sm); overflow: hidden; }
+.affiliate-inner a { display: block; width: 100%; }
+.affiliate-inner img:not([width="1"]) { width: 100%; height: auto; display: block; border-radius: 8px; }
 
 /* ─── Section panel ─── */
 .section-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
@@ -165,9 +166,30 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
 .section-panel-sub { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 14px; }
 
 /* ─── Articles ─── */
-.article-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
-.article-section-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text2); }
-.article-item { display: flex; flex-direction: column; gap: 3px; padding: 12px 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; }
+.article-section {
+  background: linear-gradient(135deg, #1a1830 0%, #13131a 100%);
+  border: 1px solid rgba(124,106,255,0.3);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.article-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.article-section-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.article-section-link {
+  font-size: 12px; color: var(--accent); text-decoration: none;
+  border: 1px solid rgba(124,106,255,0.4); border-radius: 999px;
+  padding: 4px 10px; transition: background 0.15s;
+}
+.article-section-link:hover { background: rgba(124,106,255,0.15); }
+.article-item {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  text-decoration: none; color: inherit; transition: opacity 0.15s;
+}
+.article-item:hover { opacity: 0.8; }
 .article-item:last-child { border-bottom: none; padding-bottom: 0; }
 .article-item-title { font-size: 14px; font-weight: 500; color: var(--text); }
 .article-item-desc { font-size: 12px; color: var(--text3); }
@@ -187,7 +209,7 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
 
   <!-- Header -->
   <div class="header">
-    <span class="step-badge" id="stepBadge">STEP 1</span>
+    <span class="step-badge" id="stepBadge" onclick="devTap()" style="cursor:pointer;">STEP 1</span>
     <div class="progress-wrap">
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
       <span class="progress-label" id="progressLabel">1 / 10</span>
@@ -254,6 +276,13 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
       <div class="cta-stack" id="ctaButtons"></div>
     </div>
 
+    <!-- 苦手復習パネル -->
+    <div id="reviewPanel" class="section-panel hidden">
+      <div class="section-panel-title" id="reviewTitle"></div>
+      <div class="section-panel-sub" id="reviewSub"></div>
+      <div class="cta-stack" id="reviewButtons"></div>
+    </div>
+
     <!-- 80%解放パネル -->
     <div id="unlockPanel" class="unlock-panel hidden">
       <div class="unlock-header">
@@ -264,32 +293,27 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
       <div class="cta-stack" id="unlockButtons"></div>
     </div>
 
-    <!-- 苦手復習パネル -->
-    <div id="reviewPanel" class="section-panel hidden">
-      <div class="section-panel-title" id="reviewTitle"></div>
-      <div class="section-panel-sub" id="reviewSub"></div>
-      <div class="cta-stack" id="reviewButtons"></div>
+    <!-- note記事 -->
+    <div class="article-section">
+      <div class="article-section-header">
+        <div class="article-section-title">📚 noteで深く学ぶ</div>
+      </div>
+      <div id="noteArticles"></div>
     </div>
 
     <!-- 証券口座アフィリエイト（A8.net指定バナー） -->
     <div class="affiliate-wrap">
-      <div class="affiliate-label">口座開設で実際の投資へ（無料）</div>
+      <div class="affiliate-label">口座開設で実際の投資へ（無料・松井証券）</div>
       <div class="affiliate-inner">
-        <a href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" rel="nofollow" target="_blank">
-          <img border="0" width="300" height="250" alt="" src="https://www20.a8.net/svt/bgt?aid=260511516269&wid=004&eno=01&mid=s00000018318001086000&mc=1">
+        <a href="https://px.a8.net/svt/ejp?a8mat=4B3NZ0+4G5OTM+3XCC+6ARKX" rel="nofollow" target="_blank">
+          <img border="0" width="320" height="50" alt="" src="https://www24.a8.net/svt/bgt?aid=260511516269&wid=004&eno=01&mid=s00000018318001058000&mc=1" style="width:100%;height:auto;display:block;border-radius:8px;">
         </a>
-        <img border="0" width="1" height="1" src="https://www15.a8.net/0.gif?a8mat=4B3NZ0+4G5OTM+3XCC+6GRMP" alt="" style="position:absolute;opacity:0;pointer-events:none;">
+        <img border="0" width="1" height="1" src="https://www14.a8.net/0.gif?a8mat=4B3NZ0+4G5OTM+3XCC+6ARKX" alt="" style="position:absolute;opacity:0;pointer-events:none;">
       </div>
     </div>
 
-    <!-- note記事 -->
-    <div class="article-section">
-      <div class="article-section-title">📚 noteで深く学ぶ</div>
-      <div id="noteArticles"></div>
-    </div>
-
     <div class="notice">
-      <b>このアプリの狙い：</b>初心者が「タイミングの見方」を実感できるよう、難しすぎない設定にしています。実際の投資では出来高・支持線・損切り位置・決算予定などをご確認ください。<br>※投資は元本割れのリスクがあります。
+      <b>このアプリの狙い：</b>初心者が「タイミングの見方」を実感できるよう、難しすぎない設定にしています。実際の投資では出来高・支持線・損切り位置・決算予定などなどご確認ください。<br>※投資は元本割れのリスクがあります。
     </div>
   </div>
 
@@ -376,6 +400,24 @@ function shuffle(a){ const c=[...a]; for(let i=c.length-1;i>0;i--){ const j=Math
 function pick(a,n){ return shuffle(a).slice(0,n); }
 function label(v){ return v==='buy'?'上がる':v==='sell'?'下がる':'わからない'; }
 function makeNewSet(){ patternQuestions=pick(ALL_PATTERN_QUESTIONS,10); scenarios=pick(ALL_SCENARIOS,10); }
+
+// ─── 隠し機能：STEP1バッジを5回連続タップで結果画面へジャンプ ───
+let devTapCount=0, devTapTimer=null;
+function devTap(){
+  devTapCount++;
+  clearTimeout(devTapTimer);
+  devTapTimer=setTimeout(()=>{ devTapCount=0; },1500);
+  if(devTapCount>=5){
+    devTapCount=0;
+    // ダミースコアをセットして結果画面へ
+    total=20; correctCount=16; wins=7; losses=3; cash=320000;
+    missedPatterns=pick(ALL_PATTERN_QUESTIONS,2);
+    missedScenarios=pick(ALL_SCENARIOS,2);
+    document.getElementById('patternArea').classList.add('hidden');
+    document.getElementById('demoArea').classList.add('hidden');
+    showCta();
+  }
+}
 
 // ─── Header ───
 function updateHeader(){
@@ -617,31 +659,9 @@ function showCta(){
   document.getElementById('statWL').textContent=`${wins}-${losses}`;
   document.getElementById('statCash').textContent=money(cash);
 
-  // メインCTA
+  // メインCTA（一から特訓する）→ 苦手復習の前に
   document.getElementById('ctaButtons').innerHTML=`
-    <button class="cta-btn cta-primary" onclick="resetAll()">🔥 もう一度特訓する</button>
-    <a class="cta-btn cta-note" href="https://note.com/route_365jp" target="_blank" rel="noopener">📚 noteで深く学ぶ</a>`;
-
-  // 80%解放パネル
-  const unlockEl=document.getElementById('unlockPanel');
-  const unlockBtns=document.getElementById('unlockButtons');
-  unlockEl.classList.remove('hidden');
-
-  if(rate>=80){
-    unlockEl.className='unlock-panel';
-    document.getElementById('unlockIcon').textContent='🎉';
-    document.getElementById('unlockTitle').textContent='正答率80%以上！実践プレミアム解放';
-    document.getElementById('unlockSub').textContent='チャートの見方が身についてきました。黒背景＋価格帯別出来高つきの実践モードで、より本番に近い練習へ進みましょう。';
-    unlockBtns.innerHTML=`
-      <button class="cta-btn cta-green" onclick="startRealChartMode()">🚀 実践プレミアムへ進む</button>
-      <a class="cta-btn cta-ghost" href="https://note.com/route_365jp" target="_blank" rel="noopener">noteで実践知識を見る →</a>`;
-  } else {
-    unlockEl.className='unlock-panel locked';
-    document.getElementById('unlockIcon').textContent='🔒';
-    document.getElementById('unlockTitle').textContent=`実践プレミアムは正答率80%以上で解放（現在${rate}%）`;
-    document.getElementById('unlockSub').textContent='苦手問題を繰り返して80%以上を目指しましょう。解放されると黒背景＋価格帯別出来高つきの本格チャートで練習できます。';
-    unlockBtns.innerHTML='';
-  }
+    <button class="cta-btn cta-primary" onclick="resetAll()">🔥 一から特訓する</button>`;
 
   // 苦手復習パネル
   const missCount=missedPatterns.length+missedScenarios.length;
@@ -655,8 +675,31 @@ function showCta(){
     reviewEl.classList.add('hidden');
   }
 
-  // note記事
-  document.getElementById('noteArticles').innerHTML=shuffle(NOTE_ARTICLES).slice(0,3).map(a=>`
+  // 80%解放パネル
+  const unlockEl=document.getElementById('unlockPanel');
+  const unlockBtns=document.getElementById('unlockButtons');
+  unlockEl.classList.remove('hidden');
+
+  if(rate>=80){
+    unlockEl.className='unlock-panel';
+    document.getElementById('unlockIcon').textContent='🎉';
+    document.getElementById('unlockTitle').textContent='正答率80%以上！実践プレミアム解放';
+    document.getElementById('unlockSub').textContent='チャートの見方が身についてきました。黒背景＋価格帯別出来高つきの実践モードで、より本番に近い練習へ進みましょう。';
+    unlockBtns.innerHTML=`
+      <button class="cta-btn cta-green" onclick="startRealChartMode()">🚀 実践プレミアムへ進む</button>`;
+  } else {
+    unlockEl.className='unlock-panel locked';
+    document.getElementById('unlockIcon').textContent='🔒';
+    document.getElementById('unlockTitle').textContent=`実践プレミアムは正答率80%以上で解放（現在${rate}%）`;
+    document.getElementById('unlockSub').textContent='苦手問題を繰り返して80%以上を目指しましょう。解放されると黒背景＋価格帯別出来高つきの本格チャートで練習できます。';
+    unlockBtns.innerHTML='';
+  }
+
+  // note記事（80%解放時はnoteリンクを目立たせる）
+  const noteMain = rate>=80
+    ? `<a class="cta-btn cta-note" href="https://note.com/route_365jp" target="_blank" rel="noopener" style="margin-bottom:14px;display:block;text-align:center;font-weight:700;">📝 noteで実践知識を深める →</a>`
+    : '';
+  document.getElementById('noteArticles').innerHTML= noteMain + shuffle(NOTE_ARTICLES).slice(0,3).map(a=>`
     <a class="article-item" href="${a.url}" target="_blank" rel="noopener">
       <span class="article-item-title">${a.title}</span>
       <span class="article-item-desc">${a.desc}</span>
