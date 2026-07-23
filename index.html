@@ -54,6 +54,35 @@ body {
 .progress-label { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; white-space: nowrap; }
 .rate-badge { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--amber); background: var(--amber-dim); padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
 
+/* ─── Level / Streak (2026-08-01追加) ─── */
+.level-badge {
+  font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace;
+  color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2));
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap; cursor: default;
+}
+.level-banner {
+  background: linear-gradient(135deg, #1a1830 0%, #13131a 100%);
+  border: 1px solid rgba(124,106,255,0.35);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+.level-banner-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.level-banner-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.level-banner-xp { font-size: 12px; color: var(--accent); font-family: 'DM Mono', monospace; }
+.level-progress-bar { height: 8px; background: var(--surface2); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+.level-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #a78bfa); border-radius: 999px; transition: width 0.5s ease; }
+.level-banner-sub { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.streak-chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: rgba(251,191,36,0.12); color: var(--amber); font-family: 'DM Mono', monospace; }
+.levelup-toast {
+  display: none;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #fff; border-radius: var(--radius-sm); padding: 14px 16px;
+  margin-bottom: 12px; text-align: center; font-weight: 700; font-size: 15px;
+  animation: fadeUp 0.3s ease;
+}
+
 /* ─── Card ─── */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
 .q-title { padding: 18px 18px 0; font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text); }
@@ -209,6 +238,7 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
 
   <!-- Header -->
   <div class="header">
+    <span class="level-badge" id="levelBadge">Lv.1</span>
     <span class="step-badge" id="stepBadge" onclick="devTap()" style="cursor:pointer;">STEP 1</span>
     <div class="progress-wrap">
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
@@ -256,6 +286,20 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
 
   <!-- Finish area -->
   <div id="ctaArea" class="hidden">
+    <div class="levelup-toast" id="levelupToast"></div>
+
+    <div class="level-banner">
+      <div class="level-banner-top">
+        <span class="level-banner-title" id="levelBannerTitle">Lv.1 見習いトレーダー</span>
+        <span class="level-banner-xp" id="levelBannerXp">+0 XP</span>
+      </div>
+      <div class="level-progress-bar"><div class="level-progress-fill" id="levelProgressFill" style="width:0%"></div></div>
+      <div class="level-banner-sub">
+        <span id="levelNextLabel">次のレベルまであと0XP</span>
+        <span class="streak-chip" id="streakChip">🔥0日連続</span>
+      </div>
+    </div>
+
     <div class="finish-card">
       <div class="finish-title" id="finishTitle">練習完了！</div>
       <div class="finish-sub" id="finishSub">お疲れさまでした。</div>
@@ -393,6 +437,89 @@ let missedPatterns=[], missedScenarios=[];
 let reviewMode=false, realChartMode=false;
 let currentData=null;
 
+// ─── Progress（レベル・XP・連続日数の保存機能。2026-08-01追加） ───
+const PROGRESS_KEY='chartTrainingProgress_v1';
+const XP_PER_PATTERN=10;
+const XP_PER_DEMO=15;
+const XP_SESSION_BONUS=20;
+// レベルNに到達するために必要な累計XP（配列のi番目 = レベルi+2に必要な累計XP）
+const LEVEL_THRESHOLDS=[100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
+
+let PROGRESS={ totalXp:0, streak:0, lastPlayDate:null, bestRate:0 };
+let sessionXpGained=0, sessionLevelUp=false, sessionStartLevel=1;
+
+function loadProgress(){
+  try{
+    const raw=localStorage.getItem(PROGRESS_KEY);
+    if(raw) PROGRESS=Object.assign(PROGRESS, JSON.parse(raw));
+  }catch(e){ /* 読み込めない場合は初期値のまま進める */ }
+}
+function saveProgress(){
+  try{ localStorage.setItem(PROGRESS_KEY, JSON.stringify(PROGRESS)); }catch(e){}
+}
+function computeLevel(totalXp){
+  let lv=1;
+  for(const th of LEVEL_THRESHOLDS){ if(totalXp>=th) lv++; else break; }
+  return lv;
+}
+function levelTitle(lv){
+  if(lv<=1) return '見習いトレーダー';
+  if(lv<=3) return '初級トレーダー';
+  if(lv<=6) return '中級トレーダー';
+  if(lv<=9) return '上級トレーダー';
+  return 'マスタートレーダー';
+}
+function xpRangeForLevel(lv){
+  const prevTh = lv<=1 ? 0 : LEVEL_THRESHOLDS[lv-2];
+  const nextTh = lv-1 < LEVEL_THRESHOLDS.length ? LEVEL_THRESHOLDS[lv-1] : null;
+  return {prevTh, nextTh};
+}
+function addXp(amount){
+  PROGRESS.totalXp += amount;
+  sessionXpGained += amount;
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function updateStreak(){
+  const today=todayStr();
+  if(PROGRESS.lastPlayDate===today){
+    // 同じ日はカウントしない
+  } else {
+    const last=PROGRESS.lastPlayDate ? new Date(PROGRESS.lastPlayDate) : null;
+    const now=new Date(today);
+    const diffDays = last ? Math.round((now-last)/86400000) : null;
+    if(diffDays===1){ PROGRESS.streak += 1; }
+    else { PROGRESS.streak = 1; }
+    PROGRESS.lastPlayDate = today;
+  }
+}
+function renderHeaderLevel(){
+  const lv=computeLevel(PROGRESS.totalXp);
+  document.getElementById('levelBadge').textContent='Lv.'+lv;
+}
+function renderLevelBanner(){
+  const lv=computeLevel(PROGRESS.totalXp);
+  const {prevTh, nextTh} = xpRangeForLevel(lv);
+  document.getElementById('levelBannerTitle').textContent=`Lv.${lv} ${levelTitle(lv)}`;
+  document.getElementById('levelBannerXp').textContent=`+${sessionXpGained} XP`;
+  if(nextTh===null){
+    document.getElementById('levelProgressFill').style.width='100%';
+    document.getElementById('levelNextLabel').textContent='最高レベルに到達中！';
+  } else {
+    const pct=Math.max(0,Math.min(100,(PROGRESS.totalXp-prevTh)/(nextTh-prevTh)*100));
+    document.getElementById('levelProgressFill').style.width=pct+'%';
+    document.getElementById('levelNextLabel').textContent=`次のレベルまであと${nextTh-PROGRESS.totalXp}XP`;
+  }
+  document.getElementById('streakChip').textContent=`🔥${PROGRESS.streak}日連続`;
+
+  const toast=document.getElementById('levelupToast');
+  if(sessionLevelUp){
+    toast.style.display='block';
+    toast.textContent=`🎉 レベルアップ！ Lv.${sessionStartLevel} → Lv.${lv}（${levelTitle(lv)}）`;
+  } else {
+    toast.style.display='none';
+  }
+}
+
 // ─── Utils ───
 function rng(seed){ let x=Math.sin(seed)*10000; return x-Math.floor(x); }
 function money(n){ return Math.round(n).toLocaleString(); }
@@ -413,6 +540,7 @@ function devTap(){
     total=20; correctCount=16; wins=7; losses=3; cash=320000;
     missedPatterns=pick(ALL_PATTERN_QUESTIONS,2);
     missedScenarios=pick(ALL_SCENARIOS,2);
+    sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
     document.getElementById('patternArea').classList.add('hidden');
     document.getElementById('demoArea').classList.add('hidden');
     showCta();
@@ -474,7 +602,7 @@ function loadPattern(){
 function answerPattern(choice){
   if(answered) return; answered=true;
   const p=patternQuestions[patternIndex]; total++;
-  const ok=choice===p.answer; if(ok) correctCount++; else if(!reviewMode) missedPatterns.push(p);
+  const ok=choice===p.answer; if(ok){ correctCount++; addXp(XP_PER_PATTERN); } else if(!reviewMode) missedPatterns.push(p);
   updateHeader();
   ['buy','wait','sell'].forEach(v=>{ const b=document.getElementById('btn-'+v); b.disabled=true; if(v===choice) b.classList.add('selected'); });
   const r=document.getElementById('patternResult');
@@ -616,7 +744,7 @@ function loadTrade(){
 function makeDecision(choice){
   if(answered) return; answered=true;
   const s=scenarios[tradeIndex]; total++;
-  const ok=choice===s.correct; if(ok) correctCount++; else if(!reviewMode&&!realChartMode) missedScenarios.push(s);
+  const ok=choice===s.correct; if(ok){ correctCount++; addXp(XP_PER_DEMO); } else if(!reviewMode&&!realChartMode) missedScenarios.push(s);
   ['buy','wait','sell'].forEach(v=>{ const b=document.getElementById('dbtn-'+v); b.disabled=true; if(v===choice) b.classList.add('selected'); });
 
   let tradeHTML='';
@@ -652,7 +780,16 @@ function showCta(){
   document.getElementById('ctaArea').classList.remove('hidden');
   updateHeader();
 
+  // セッション完了ボーナスXP・ストリーク更新・保存（2026-08-01追加）
+  addXp(XP_SESSION_BONUS);
+  updateStreak();
   const rate=total?Math.round(correctCount/total*100):0;
+  if(rate>PROGRESS.bestRate) PROGRESS.bestRate=rate;
+  sessionLevelUp = computeLevel(PROGRESS.totalXp) > sessionStartLevel;
+  saveProgress();
+  renderHeaderLevel();
+  renderLevelBanner();
+
   document.getElementById('finishTitle').textContent=reviewMode?'復習完了！':realChartMode?'実践完了！':'練習完了！';
   document.getElementById('finishSub').textContent=`判断正答率 ${rate}%　勝敗 ${wins}勝${losses}敗`;
   document.getElementById('statRate').textContent=rate+'%';
@@ -715,6 +852,7 @@ function startReviewMode(){
   missedPatterns=[]; missedScenarios=[];
   patternQuestions=op; scenarios=os;
   patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+  sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
   document.getElementById('ctaArea').classList.add('hidden');
   if(patternQuestions.length>0){
     document.getElementById('patternArea').classList.remove('hidden');
@@ -733,6 +871,7 @@ function startRealChartMode(){
   patternQuestions=[];
   scenarios=pick(ALL_SCENARIOS,5);
   patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+  sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
   document.getElementById('ctaArea').classList.add('hidden');
   document.getElementById('patternArea').classList.add('hidden');
   document.getElementById('demoArea').classList.remove('hidden');
@@ -743,12 +882,16 @@ function startRealChartMode(){
 function resetAll(){
   makeNewSet();
   stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; reviewMode=false; realChartMode=false; missedPatterns=[]; missedScenarios=[];
+  sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
   document.getElementById('patternArea').classList.remove('hidden');
   document.getElementById('demoArea').classList.add('hidden');
   document.getElementById('ctaArea').classList.add('hidden');
   loadPattern();
 }
 
+loadProgress();
+renderHeaderLevel();
+sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
 makeNewSet();
 loadPattern();
 </script>
