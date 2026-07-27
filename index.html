@@ -53,6 +53,13 @@ body {
 .progress-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.4s ease; }
 .progress-label { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; white-space: nowrap; }
 .rate-badge { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--amber); background: var(--amber-dim); padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+.combo-badge {
+  font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace;
+  color: #0a0a0f; background: linear-gradient(135deg, var(--amber), #fca311);
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+}
+.combo-badge.pop { animation: comboPop 0.35s ease; }
+@keyframes comboPop { 0%{ transform:scale(0.7); } 55%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
 
 /* ─── Level / Streak (2026-08-01追加) ─── */
 .level-badge {
@@ -245,6 +252,7 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
       <span class="progress-label" id="progressLabel">1 / 10</span>
     </div>
     <span class="rate-badge" id="rateBadge">正答率 0%</span>
+    <span class="combo-badge hidden" id="comboBadge">🔥2連続</span>
   </div>
 
   <!-- STEP1: Pattern area -->
@@ -364,62 +372,64 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
 </div>
 
 <script>
+// difficulty: 1=はっきりした形（自信がつきやすい） 2=やや複雑 3=判断が分かれる高難度（「わからない」系が中心）
 const ALL_PATTERN_QUESTIONS = [
-{ name:'赤三兵', answer:'buy', text:'陽線が3本続く強い形。上昇の勢いがあり、上がる候補。', candles:[[40,58,62,36],[57,72,76,54],[71,88,92,68]] },
-{ name:'三川明けの明星', answer:'buy', text:'下落後の反転サイン。大陽線で切り返しており、上がる候補。', candles:[[88,48,92,45],[45,47,52,40],[49,78,82,47]] },
-{ name:'上放れたすき', answer:'buy', text:'上昇中に窓を開けて強い形。上昇継続を狙いやすい。', candles:[[38,52,55,36],[53,66,69,51],[78,92,95,76],[93,86,96,84]] },
-{ name:'上昇三角型', answer:'buy', text:'高値がそろい、安値が切り上がる形。上抜け期待の形。', candles:[[45,55,58,42],[55,50,59,48],[51,60,62,50],[60,56,63,54],[57,68,72,56]] },
-{ name:'押し目反発', answer:'buy', text:'上昇後に少し下げて、再び陽線。わかりやすい上がる形。', candles:[[42,55,57,40],[55,68,70,54],[68,62,69,60],[62,74,78,61]] },
-{ name:'包み陽線', answer:'buy', text:'前日の陰線を大きな陽線で包み込む形。反転上昇を期待しやすい。', candles:[[70,55,73,52],[53,78,82,50]] },
-{ name:'陽の丸坊主', answer:'buy', text:'ヒゲが少ない強い陽線。買いの勢いが強い形。', candles:[[45,80,80,45]] },
-{ name:'陽のつつみ線', answer:'buy', text:'下げたあとに強い陽線で包む形。反転のきっかけになりやすい。', candles:[[76,58,78,55],[56,84,86,54]] },
-{ name:'下げ止まり陽線', answer:'buy', text:'下落後に安値を切り上げ、陽線が出る形。反発の可能性。', candles:[[90,76,92,74],[76,63,78,60],[64,72,75,62]] },
-{ name:'スパイクロー', answer:'buy', text:'大きく下げたあとに長い下ヒゲ。売られすぎから反発しやすい。', candles:[[70,73,76,35],[74,82,85,72]] },
-{ name:'ランウェイアップ', answer:'buy', text:'小さな陽線が階段状に続く形。じわじわ上がる流れ。', candles:[[40,46,48,38],[46,52,54,44],[52,58,60,50],[58,65,67,56],[65,72,74,63]] },
-{ name:'三空踏み上げ', answer:'buy', text:'窓を開けながら上がる強い形。ただし高値掴みには注意。', candles:[[35,45,47,34],[51,62,64,50],[68,80,82,67]] },
-{ name:'かぶせ線', answer:'sell', text:'上昇後に大陰線がかぶさる形。上値が重く、下がる警戒。', candles:[[46,80,84,44],[86,55,89,52]] },
-{ name:'首吊り線', answer:'sell', text:'高値圏で長い下ヒゲ。反落警戒で、下がる可能性。', candles:[[42,55,58,40],[55,70,73,54],[72,74,78,43]] },
-{ name:'三尊', answer:'sell', text:'天井型。右肩後に崩れる可能性があり、下がる警戒。', candles:[[42,58,62,40],[58,75,78,55],[75,55,77,53],[55,92,98,54],[92,58,95,55],[58,72,75,56],[72,48,74,44]] },
-{ name:'黒三兵', answer:'sell', text:'陰線が3本続く弱い形。下落の勢いが強い。', candles:[[88,72,90,70],[72,58,75,56],[58,42,60,40]] },
-{ name:'包み陰線', answer:'sell', text:'前日の陽線を大きな陰線で包む形。反落警戒。', candles:[[55,76,78,53],[78,48,81,46]] },
-{ name:'陰の丸坊主', answer:'sell', text:'ヒゲが少ない強い陰線。売りの勢いが強い形。', candles:[[82,45,82,45]] },
-{ name:'トウバ', answer:'sell', text:'上ヒゲが長く実体が小さい形。高値圏なら失速に注意。', candles:[[70,71,96,69]] },
-{ name:'流れ星', answer:'sell', text:'上昇後の長い上ヒゲ。上値を押さえられたサイン。', candles:[[50,62,64,48],[62,76,78,60],[78,72,98,70]] },
-{ name:'はらみ陰線', answer:'sell', text:'大陽線の後に小さな陰線。勢いが止まった可能性。', candles:[[45,80,82,43],[72,65,76,63]] },
-{ name:'下げ三法', answer:'sell', text:'下落の途中で小さく戻して、また下げる形。下落継続に注意。', candles:[[88,62,90,60],[62,67,69,61],[67,70,72,65],[70,74,76,68],[74,50,76,48]] },
-{ name:'十字線', answer:'wait', text:'買いと売りが迷っている形。単独では判断しづらい。', candles:[[66,66,82,50]] },
-{ name:'レンジ中央', answer:'wait', text:'方向感が弱い。上がるにも下がるにも中途半端。', candles:[[55,62,65,53],[62,56,64,54],[56,63,66,55],[63,58,65,56],[58,61,64,57]] },
-{ name:'小動き横ばい', answer:'wait', text:'値幅が小さく方向感がない。無理に判断しない。', candles:[[60,62,64,58],[62,61,63,59],[61,63,65,60],[63,62,64,60]] },
-{ name:'出来高なし反発', answer:'wait', text:'少し上がっても勢いが弱い。まだ本格上昇とは言いにくい。', candles:[[78,60,80,58],[60,65,67,59],[65,67,69,64]] },
-{ name:'抵抗線手前', answer:'wait', text:'上がっているが、上値抵抗に近い。抜けるまでわからない。', candles:[[45,55,57,43],[55,64,66,53],[64,70,72,62],[70,69,73,67]] },
-{ name:'支持線手前', answer:'wait', text:'下がっているが、支持線で止まる可能性もある。まだ判断しづらい。', candles:[[82,72,84,70],[72,64,74,62],[64,60,66,58],[60,61,63,57]] },
+{ name:'赤三兵', answer:'buy', difficulty:1, text:'陽線が3本続く強い形。上昇の勢いがあり、上がる候補。', candles:[[40,58,62,36],[57,72,76,54],[71,88,92,68]] },
+{ name:'三川明けの明星', answer:'buy', difficulty:1, text:'下落後の反転サイン。大陽線で切り返しており、上がる候補。', candles:[[88,48,92,45],[45,47,52,40],[49,78,82,47]] },
+{ name:'上放れたすき', answer:'buy', difficulty:2, text:'上昇中に窓を開けて強い形。上昇継続を狙いやすい。', candles:[[38,52,55,36],[53,66,69,51],[78,92,95,76],[93,86,96,84]] },
+{ name:'上昇三角型', answer:'buy', difficulty:2, text:'高値がそろい、安値が切り上がる形。上抜け期待の形。', candles:[[45,55,58,42],[55,50,59,48],[51,60,62,50],[60,56,63,54],[57,68,72,56]] },
+{ name:'押し目反発', answer:'buy', difficulty:2, text:'上昇後に少し下げて、再び陽線。わかりやすい上がる形。', candles:[[42,55,57,40],[55,68,70,54],[68,62,69,60],[62,74,78,61]] },
+{ name:'包み陽線', answer:'buy', difficulty:1, text:'前日の陰線を大きな陽線で包み込む形。反転上昇を期待しやすい。', candles:[[70,55,73,52],[53,78,82,50]] },
+{ name:'陽の丸坊主', answer:'buy', difficulty:1, text:'ヒゲが少ない強い陽線。買いの勢いが強い形。', candles:[[45,80,80,45]] },
+{ name:'陽のつつみ線', answer:'buy', difficulty:1, text:'下げたあとに強い陽線で包む形。反転のきっかけになりやすい。', candles:[[76,58,78,55],[56,84,86,54]] },
+{ name:'下げ止まり陽線', answer:'buy', difficulty:2, text:'下落後に安値を切り上げ、陽線が出る形。反発の可能性。', candles:[[90,76,92,74],[76,63,78,60],[64,72,75,62]] },
+{ name:'スパイクロー', answer:'buy', difficulty:1, text:'大きく下げたあとに長い下ヒゲ。売られすぎから反発しやすい。', candles:[[70,73,76,35],[74,82,85,72]] },
+{ name:'ランウェイアップ', answer:'buy', difficulty:2, text:'小さな陽線が階段状に続く形。じわじわ上がる流れ。', candles:[[40,46,48,38],[46,52,54,44],[52,58,60,50],[58,65,67,56],[65,72,74,63]] },
+{ name:'三空踏み上げ', answer:'buy', difficulty:2, text:'窓を開けながら上がる強い形。ただし高値掴みには注意。', candles:[[35,45,47,34],[51,62,64,50],[68,80,82,67]] },
+{ name:'かぶせ線', answer:'sell', difficulty:1, text:'上昇後に大陰線がかぶさる形。上値が重く、下がる警戒。', candles:[[46,80,84,44],[86,55,89,52]] },
+{ name:'首吊り線', answer:'sell', difficulty:2, text:'高値圏で長い下ヒゲ。反落警戒で、下がる可能性。', candles:[[42,55,58,40],[55,70,73,54],[72,74,78,43]] },
+{ name:'三尊', answer:'sell', difficulty:2, text:'天井型。右肩後に崩れる可能性があり、下がる警戒。', candles:[[42,58,62,40],[58,75,78,55],[75,55,77,53],[55,92,98,54],[92,58,95,55],[58,72,75,56],[72,48,74,44]] },
+{ name:'黒三兵', answer:'sell', difficulty:1, text:'陰線が3本続く弱い形。下落の勢いが強い。', candles:[[88,72,90,70],[72,58,75,56],[58,42,60,40]] },
+{ name:'包み陰線', answer:'sell', difficulty:1, text:'前日の陽線を大きな陰線で包む形。反落警戒。', candles:[[55,76,78,53],[78,48,81,46]] },
+{ name:'陰の丸坊主', answer:'sell', difficulty:1, text:'ヒゲが少ない強い陰線。売りの勢いが強い形。', candles:[[82,45,82,45]] },
+{ name:'トウバ', answer:'sell', difficulty:2, text:'上ヒゲが長く実体が小さい形。高値圏なら失速に注意。', candles:[[70,71,96,69]] },
+{ name:'流れ星', answer:'sell', difficulty:2, text:'上昇後の長い上ヒゲ。上値を押さえられたサイン。', candles:[[50,62,64,48],[62,76,78,60],[78,72,98,70]] },
+{ name:'はらみ陰線', answer:'sell', difficulty:2, text:'大陽線の後に小さな陰線。勢いが止まった可能性。', candles:[[45,80,82,43],[72,65,76,63]] },
+{ name:'下げ三法', answer:'sell', difficulty:2, text:'下落の途中で小さく戻して、また下げる形。下落継続に注意。', candles:[[88,62,90,60],[62,67,69,61],[67,70,72,65],[70,74,76,68],[74,50,76,48]] },
+{ name:'十字線', answer:'wait', difficulty:3, text:'買いと売りが迷っている形。単独では判断しづらい。', candles:[[66,66,82,50]] },
+{ name:'レンジ中央', answer:'wait', difficulty:3, text:'方向感が弱い。上がるにも下がるにも中途半端。', candles:[[55,62,65,53],[62,56,64,54],[56,63,66,55],[63,58,65,56],[58,61,64,57]] },
+{ name:'小動き横ばい', answer:'wait', difficulty:3, text:'値幅が小さく方向感がない。無理に判断しない。', candles:[[60,62,64,58],[62,61,63,59],[61,63,65,60],[63,62,64,60]] },
+{ name:'出来高なし反発', answer:'wait', difficulty:3, text:'少し上がっても勢いが弱い。まだ本格上昇とは言いにくい。', candles:[[78,60,80,58],[60,65,67,59],[65,67,69,64]] },
+{ name:'抵抗線手前', answer:'wait', difficulty:3, text:'上がっているが、上値抵抗に近い。抜けるまでわからない。', candles:[[45,55,57,43],[55,64,66,53],[64,70,72,62],[70,69,73,67]] },
+{ name:'支持線手前', answer:'wait', difficulty:3, text:'下がっているが、支持線で止まる可能性もある。まだ判断しづらい。', candles:[[82,72,84,70],[72,64,74,62],[64,60,66,58],[60,61,63,57]] },
 ];
 
+// difficulty: 1=素直なトレンドで判断しやすい 2=移動平均線や押し目など読み解きが必要 3=方向感が薄く「わからない」判断力が問われる
 const ALL_SCENARIOS = [
-{ name:'ブレイク成功型', seed:1, trend:0.55, volatility:1.8, setup:'breakout', correct:'buy', entry:1000, stop:970, target:1060, future:[1015,1030,1045,1060,1075,1090,1085,1100,1120,1130], reason:'抵抗線を上抜け、5日線も25日線の上。出来高も増えており、上がると判断しやすい形。' },
-{ name:'押し目反発型', seed:2, trend:0.38, volatility:1.7, setup:'pullback', correct:'buy', entry:1200, stop:1164, target:1270, future:[1215,1230,1245,1270,1290,1280,1305,1320,1330,1340], reason:'上昇中に軽く押して、再び反発。損切りも近く、練習しやすい形。' },
-{ name:'出来高上抜け型', seed:3, trend:0.35, volatility:1.8, setup:'volumeBreak', correct:'buy', entry:820, stop:795, target:880, future:[835,850,865,880,900,915,905,930,940,950], reason:'出来高を伴ってもみ合いを突破。大口が入りそうな雰囲気がある形。' },
-{ name:'下落中危険型', seed:4, trend:-0.32, volatility:1.9, setup:'down', correct:'wait', entry:900, stop:873, target:960, future:[890,875,860,845,835,850,840,825,815,820], reason:'25日線が下向きで、株価も線の下。反発が弱く、買わない判断が正解。' },
-{ name:'高値つかみ型', seed:5, trend:0.45, volatility:2.0, setup:'top', correct:'sell', entry:1500, stop:1545, target:1600, future:[1480,1460,1435,1410,1395,1405,1380,1360,1375,1350], reason:'上昇後に失速。高値で出来高が増えたあと下げており、下がる警戒。' },
-{ name:'レンジ見送り型', seed:6, trend:0.04, volatility:1.4, setup:'range', correct:'wait', entry:980, stop:951, target:1040, future:[985,990,975,995,1000,990,985,1005,995,1000], reason:'チャートの真ん中で方向感が弱い。勝ちやすい場所ではないので、わからない。' },
-{ name:'再ブレイク型', seed:7, trend:0.42, volatility:1.6, setup:'breakout', correct:'buy', entry:760, stop:737, target:815, future:[770,785,800,815,830,845,840,855,870,880], reason:'いったん横ばい後に再び上抜け。5日線も上向きで、流れに乗りやすい。' },
-{ name:'25日線反発型', seed:8, trend:0.30, volatility:1.5, setup:'pullback', correct:'buy', entry:1350, stop:1310, target:1420, future:[1365,1380,1400,1420,1445,1460,1450,1470,1490,1505], reason:'25日線付近で下げ止まり、陽線で反発。押し目買いの練習に良い形。' },
-{ name:'弱い戻り型', seed:9, trend:-0.25, volatility:1.8, setup:'down', correct:'wait', entry:700, stop:679, target:750, future:[695,685,675,665,655,670,660,650,645,640], reason:'戻しているように見えても、全体は下向き。勝ちやすい形ではないため、わからない。' },
-{ name:'最後のブレイク型', seed:10, trend:0.48, volatility:1.6, setup:'volumeBreak', correct:'buy', entry:1100, stop:1067, target:1170, future:[1120,1140,1155,1170,1190,1210,1200,1225,1240,1260], reason:'出来高増加＋移動平均線上向き＋上抜け。上がると判断しやすい設定。' },
-{ name:'三角持ち合い型', seed:11, trend:0.22, volatility:1.6, setup:'breakout', correct:'buy', entry:940, stop:912, target:1000, future:[950,965,980,1000,1020,1010,1035,1050,1040,1065], reason:'もみ合いから上へ抜けた形。出来高も少し増えており、上がる期待が持てる。' },
-{ name:'窓開け上昇型', seed:12, trend:0.50, volatility:1.7, setup:'volumeBreak', correct:'buy', entry:680, stop:660, target:735, future:[695,710,730,735,750,765,760,780,795,800], reason:'強い上昇の初動。窓開け後も崩れていないため、上がる判断をしやすい。' },
-{ name:'底打ち反転型', seed:13, trend:-0.05, volatility:1.8, setup:'reversal', correct:'buy', entry:560, stop:543, target:610, future:[570,585,600,610,625,620,635,650,645,660], reason:'下落後に下げ止まり、陽線が増えている。反転初動として上がる候補。' },
-{ name:'決算前様子見型', seed:14, trend:0.08, volatility:1.8, setup:'range', correct:'wait', entry:1250, stop:1212, target:1320, future:[1240,1260,1235,1275,1260,1280,1255,1270,1265,1285], reason:'方向感が弱く、イベント前のような動き。無理に判断せず、わからないが正解。' },
-{ name:'上ヒゲ連発型', seed:15, trend:0.20, volatility:2.0, setup:'top', correct:'sell', entry:1710, stop:1761, target:1820, future:[1680,1660,1640,1615,1600,1585,1570,1590,1560,1540], reason:'上値を何度も押さえられている。上がりきれず下がる可能性がある。' },
-{ name:'支持線割れ型', seed:16, trend:-0.35, volatility:1.7, setup:'down', correct:'sell', entry:1020, stop:1050, target:960, future:[1000,980,960,940,920,935,910,900,890,880], reason:'支持線を割って弱い形。下がる方向に流れやすい。' },
-{ name:'急騰後の横ばい型', seed:17, trend:0.18, volatility:1.6, setup:'range', correct:'wait', entry:1450, stop:1406, target:1530, future:[1455,1440,1460,1450,1470,1465,1455,1480,1470,1460], reason:'急騰後に横ばい。次の方向がまだ見えないため、わからない。' },
-{ name:'出来高不足型', seed:18, trend:0.12, volatility:1.7, setup:'range', correct:'wait', entry:880, stop:854, target:940, future:[885,875,890,880,895,885,875,890,900,895], reason:'上抜けに見えても出来高が弱い。ダマシの可能性があり、わからない。' },
-{ name:'5日線割れ失速型', seed:19, trend:0.28, volatility:1.8, setup:'top', correct:'sell', entry:1320, stop:1360, target:1400, future:[1300,1280,1265,1240,1225,1210,1195,1205,1180,1165], reason:'上昇後に5日線を割って失速。下がる警戒。' },
-{ name:'じわじわ上昇型', seed:20, trend:0.32, volatility:1.1, setup:'pullback', correct:'buy', entry:600, stop:582, target:650, future:[610,620,630,650,660,670,665,680,690,700], reason:'派手さはないが、安値を切り上げながら上昇。上がると考えやすい。' },
-{ name:'戻り売り優勢型', seed:21, trend:-0.22, volatility:1.5, setup:'down', correct:'sell', entry:1180, stop:1215, target:1120, future:[1160,1145,1120,1100,1085,1095,1070,1055,1065,1040], reason:'下落中の一時的な戻り。25日線付近で押し返され、下がる可能性。' },
-{ name:'大陽線後の迷い型', seed:22, trend:0.14, volatility:1.7, setup:'range', correct:'wait', entry:990, stop:960, target:1050, future:[1000,985,995,1010,1005,990,1000,1015,1005,995], reason:'大陽線の後に伸びきれない。次の方向が読みにくく、わからない。' },
-{ name:'安値切り上げ型', seed:23, trend:0.28, volatility:1.4, setup:'pullback', correct:'buy', entry:720, stop:698, target:780, future:[735,748,760,780,795,790,810,825,820,840], reason:'安値を少しずつ切り上げている。上がる流れができ始めている。' },
-{ name:'長期横ばい型', seed:24, trend:0.02, volatility:1.2, setup:'range', correct:'wait', entry:1100, stop:1067, target:1170, future:[1095,1105,1110,1100,1090,1105,1115,1100,1095,1110], reason:'長く横ばいで方向感がない。上にも下にも決めつけにくい。' },
+{ name:'ブレイク成功型', seed:1, trend:0.55, volatility:1.8, setup:'breakout', correct:'buy', difficulty:1, entry:1000, stop:970, target:1060, future:[1015,1030,1045,1060,1075,1090,1085,1100,1120,1130], reason:'抵抗線を上抜け、5日線も25日線の上。出来高も増えており、上がると判断しやすい形。' },
+{ name:'押し目反発型', seed:2, trend:0.38, volatility:1.7, setup:'pullback', correct:'buy', difficulty:2, entry:1200, stop:1164, target:1270, future:[1215,1230,1245,1270,1290,1280,1305,1320,1330,1340], reason:'上昇中に軽く押して、再び反発。損切りも近く、練習しやすい形。' },
+{ name:'出来高上抜け型', seed:3, trend:0.35, volatility:1.8, setup:'volumeBreak', correct:'buy', difficulty:1, entry:820, stop:795, target:880, future:[835,850,865,880,900,915,905,930,940,950], reason:'出来高を伴ってもみ合いを突破。大口が入りそうな雰囲気がある形。' },
+{ name:'下落中危険型', seed:4, trend:-0.32, volatility:1.9, setup:'down', correct:'wait', difficulty:1, entry:900, stop:873, target:960, future:[890,875,860,845,835,850,840,825,815,820], reason:'25日線が下向きで、株価も線の下。反発が弱く、買わない判断が正解。' },
+{ name:'高値つかみ型', seed:5, trend:0.45, volatility:2.0, setup:'top', correct:'sell', difficulty:2, entry:1500, stop:1545, target:1600, future:[1480,1460,1435,1410,1395,1405,1380,1360,1375,1350], reason:'上昇後に失速。高値で出来高が増えたあと下げており、下がる警戒。' },
+{ name:'レンジ見送り型', seed:6, trend:0.04, volatility:1.4, setup:'range', correct:'wait', difficulty:3, entry:980, stop:951, target:1040, future:[985,990,975,995,1000,990,985,1005,995,1000], reason:'チャートの真ん中で方向感が弱い。勝ちやすい場所ではないので、わからない。' },
+{ name:'再ブレイク型', seed:7, trend:0.42, volatility:1.6, setup:'breakout', correct:'buy', difficulty:2, entry:760, stop:737, target:815, future:[770,785,800,815,830,845,840,855,870,880], reason:'いったん横ばい後に再び上抜け。5日線も上向きで、流れに乗りやすい。' },
+{ name:'25日線反発型', seed:8, trend:0.30, volatility:1.5, setup:'pullback', correct:'buy', difficulty:2, entry:1350, stop:1310, target:1420, future:[1365,1380,1400,1420,1445,1460,1450,1470,1490,1505], reason:'25日線付近で下げ止まり、陽線で反発。押し目買いの練習に良い形。' },
+{ name:'弱い戻り型', seed:9, trend:-0.25, volatility:1.8, setup:'down', correct:'wait', difficulty:3, entry:700, stop:679, target:750, future:[695,685,675,665,655,670,660,650,645,640], reason:'戻しているように見えても、全体は下向き。勝ちやすい形ではないため、わからない。' },
+{ name:'最後のブレイク型', seed:10, trend:0.48, volatility:1.6, setup:'volumeBreak', correct:'buy', difficulty:1, entry:1100, stop:1067, target:1170, future:[1120,1140,1155,1170,1190,1210,1200,1225,1240,1260], reason:'出来高増加＋移動平均線上向き＋上抜け。上がると判断しやすい設定。' },
+{ name:'三角持ち合い型', seed:11, trend:0.22, volatility:1.6, setup:'breakout', correct:'buy', difficulty:2, entry:940, stop:912, target:1000, future:[950,965,980,1000,1020,1010,1035,1050,1040,1065], reason:'もみ合いから上へ抜けた形。出来高も少し増えており、上がる期待が持てる。' },
+{ name:'窓開け上昇型', seed:12, trend:0.50, volatility:1.7, setup:'volumeBreak', correct:'buy', difficulty:1, entry:680, stop:660, target:735, future:[695,710,730,735,750,765,760,780,795,800], reason:'強い上昇の初動。窓開け後も崩れていないため、上がる判断をしやすい。' },
+{ name:'底打ち反転型', seed:13, trend:-0.05, volatility:1.8, setup:'reversal', correct:'buy', difficulty:2, entry:560, stop:543, target:610, future:[570,585,600,610,625,620,635,650,645,660], reason:'下落後に下げ止まり、陽線が増えている。反転初動として上がる候補。' },
+{ name:'決算前様子見型', seed:14, trend:0.08, volatility:1.8, setup:'range', correct:'wait', difficulty:3, entry:1250, stop:1212, target:1320, future:[1240,1260,1235,1275,1260,1280,1255,1270,1265,1285], reason:'方向感が弱く、イベント前のような動き。無理に判断せず、わからないが正解。' },
+{ name:'上ヒゲ連発型', seed:15, trend:0.20, volatility:2.0, setup:'top', correct:'sell', difficulty:2, entry:1710, stop:1761, target:1820, future:[1680,1660,1640,1615,1600,1585,1570,1590,1560,1540], reason:'上値を何度も押さえられている。上がりきれず下がる可能性がある。' },
+{ name:'支持線割れ型', seed:16, trend:-0.35, volatility:1.7, setup:'down', correct:'sell', difficulty:1, entry:1020, stop:1050, target:960, future:[1000,980,960,940,920,935,910,900,890,880], reason:'支持線を割って弱い形。下がる方向に流れやすい。' },
+{ name:'急騰後の横ばい型', seed:17, trend:0.18, volatility:1.6, setup:'range', correct:'wait', difficulty:3, entry:1450, stop:1406, target:1530, future:[1455,1440,1460,1450,1470,1465,1455,1480,1470,1460], reason:'急騰後に横ばい。次の方向がまだ見えないため、わからない。' },
+{ name:'出来高不足型', seed:18, trend:0.12, volatility:1.7, setup:'range', correct:'wait', difficulty:3, entry:880, stop:854, target:940, future:[885,875,890,880,895,885,875,890,900,895], reason:'上抜けに見えても出来高が弱い。ダマシの可能性があり、わからない。' },
+{ name:'5日線割れ失速型', seed:19, trend:0.28, volatility:1.8, setup:'top', correct:'sell', difficulty:2, entry:1320, stop:1360, target:1400, future:[1300,1280,1265,1240,1225,1210,1195,1205,1180,1165], reason:'上昇後に5日線を割って失速。下がる警戒。' },
+{ name:'じわじわ上昇型', seed:20, trend:0.32, volatility:1.1, setup:'pullback', correct:'buy', difficulty:2, entry:600, stop:582, target:650, future:[610,620,630,650,660,670,665,680,690,700], reason:'派手さはないが、安値を切り上げながら上昇。上がると考えやすい。' },
+{ name:'戻り売り優勢型', seed:21, trend:-0.22, volatility:1.5, setup:'down', correct:'sell', difficulty:2, entry:1180, stop:1215, target:1120, future:[1160,1145,1120,1100,1085,1095,1070,1055,1065,1040], reason:'下落中の一時的な戻り。25日線付近で押し返され、下がる可能性。' },
+{ name:'大陽線後の迷い型', seed:22, trend:0.14, volatility:1.7, setup:'range', correct:'wait', difficulty:3, entry:990, stop:960, target:1050, future:[1000,985,995,1010,1005,990,1000,1015,1005,995], reason:'大陽線の後に伸びきれない。次の方向が読みにくく、わからない。' },
+{ name:'安値切り上げ型', seed:23, trend:0.28, volatility:1.4, setup:'pullback', correct:'buy', difficulty:2, entry:720, stop:698, target:780, future:[735,748,760,780,795,790,810,825,820,840], reason:'安値を少しずつ切り上げている。上がる流れができ始めている。' },
+{ name:'長期横ばい型', seed:24, trend:0.02, volatility:1.2, setup:'range', correct:'wait', difficulty:3, entry:1100, stop:1067, target:1170, future:[1095,1105,1110,1100,1090,1105,1115,1100,1095,1110], reason:'長く横ばいで方向感がない。上にも下にも決めつけにくい。' },
 ];
 
 const NOTE_ARTICLES = [
@@ -432,6 +442,7 @@ const NOTE_ARTICLES = [
 let patternQuestions=[], scenarios=[];
 let patternIndex=0, tradeIndex=0;
 let cash=300000, wins=0, losses=0, total=0, correctCount=0;
+let comboStreak=0; // 連続正解数（自信・勢いづけの演出用。2026-08-01追加）
 let answered=false, stage='pattern';
 let missedPatterns=[], missedScenarios=[];
 let reviewMode=false, realChartMode=false;
@@ -526,7 +537,42 @@ function money(n){ return Math.round(n).toLocaleString(); }
 function shuffle(a){ const c=[...a]; for(let i=c.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [c[i],c[j]]=[c[j],c[i]]; } return c; }
 function pick(a,n){ return shuffle(a).slice(0,n); }
 function label(v){ return v==='buy'?'上がる':v==='sell'?'下がる':'わからない'; }
-function makeNewSet(){ patternQuestions=pick(ALL_PATTERN_QUESTIONS,10); scenarios=pick(ALL_SCENARIOS,10); }
+
+// ─── 出題順の難易度設計（2026-08-01追加） ───
+// 「やさしい→ふつう→むずかしい」の順に並べることで、序盤に正解体験を積んで自信をつけ、
+// そのまま勢いよく次へ次へと進めるようにする。同じ難易度内はランダムに混ぜる。
+function buildOrderedSet(all, n, ratios){
+  const tiers = { 1:[], 2:[], 3:[] };
+  all.forEach(item=>{ (tiers[item.difficulty||2]).push(item); });
+  const shuffledTiers = { 1:shuffle(tiers[1]), 2:shuffle(tiers[2]), 3:shuffle(tiers[3]) };
+
+  let counts = [Math.round(n*ratios[0]), Math.round(n*ratios[1]), Math.round(n*ratios[2])];
+  counts[1] += n - counts.reduce((a,b)=>a+b,0); // 端数はふつう難易度で吸収
+
+  const result = [];
+  [1,2,3].forEach((d,idx)=>{
+    const take = Math.max(0, Math.min(counts[idx], shuffledTiers[d].length));
+    result.push(...shuffledTiers[d].slice(0, take));
+  });
+
+  // 難易度の偏りでnに満たない場合は残りから補充
+  if(result.length < n){
+    const used = new Set(result.map(x=>x.name));
+    const leftover = shuffle(all.filter(x=>!used.has(x.name)));
+    result.push(...leftover.slice(0, n-result.length));
+  }
+  return result;
+}
+function makeNewSet(){
+  patternQuestions = buildOrderedSet(ALL_PATTERN_QUESTIONS, 10, [0.3,0.45,0.25]);
+  scenarios = buildOrderedSet(ALL_SCENARIOS, 10, [0.3,0.5,0.2]);
+}
+// 復習モード用：件数固定の配分ではなく、手元にある問題を難易度昇順に並べるだけ
+function sortByDifficultyAsc(arr){
+  const tiers = { 1:[], 2:[], 3:[] };
+  arr.forEach(item=>{ (tiers[item.difficulty||2]).push(item); });
+  return [...shuffle(tiers[1]), ...shuffle(tiers[2]), ...shuffle(tiers[3])];
+}
 
 // ─── 隠し機能：STEP1バッジを5回連続タップで結果画面へジャンプ ───
 let devTapCount=0, devTapTimer=null;
@@ -558,6 +604,25 @@ function updateHeader(){
   document.getElementById('rateBadge').textContent='正答率 '+(total?Math.round(correctCount/total*100):0)+'%';
   const label2 = realChartMode?'PREMIUM':reviewMode?'REVIEW':(stage==='pattern'?'STEP 1':stage==='demo'?'STEP 2':'FINISH');
   document.getElementById('stepBadge').textContent=label2;
+}
+
+// ─── コンボ演出（連続正解で勢いづける。2026-08-01追加） ───
+function updateComboBadge(){
+  const el=document.getElementById('comboBadge');
+  if(comboStreak>=2){
+    el.textContent=`🔥${comboStreak}連続`;
+    el.classList.remove('hidden');
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  } else {
+    el.classList.add('hidden');
+  }
+}
+function comboEncouragement(streak){
+  if(streak===3) return '<div style="margin-top:8px;font-size:12px;color:var(--amber);font-weight:700;">🔥 3問連続正解！感覚をつかめてきましたね</div>';
+  if(streak===5) return '<div style="margin-top:8px;font-size:12px;color:var(--amber);font-weight:700;">🔥🔥 5問連続！絶好調です</div>';
+  if(streak===7) return '<div style="margin-top:8px;font-size:12px;color:var(--amber);font-weight:700;">🔥🔥🔥 7問連続！波に乗ってます</div>';
+  if(streak>=10 && streak%5===0) return `<div style="margin-top:8px;font-size:12px;color:var(--amber);font-weight:700;">🔥🔥🔥 ${streak}問連続！絶好調が続いています</div>`;
+  return '';
 }
 
 // ─── SVG helpers ───
@@ -602,13 +667,14 @@ function loadPattern(){
 function answerPattern(choice){
   if(answered) return; answered=true;
   const p=patternQuestions[patternIndex]; total++;
-  const ok=choice===p.answer; if(ok){ correctCount++; addXp(XP_PER_PATTERN); } else if(!reviewMode) missedPatterns.push(p);
-  updateHeader();
+  const ok=choice===p.answer;
+  if(ok){ correctCount++; addXp(XP_PER_PATTERN); comboStreak++; } else { comboStreak=0; if(!reviewMode) missedPatterns.push(p); }
+  updateHeader(); updateComboBadge();
   ['buy','wait','sell'].forEach(v=>{ const b=document.getElementById('btn-'+v); b.disabled=true; if(v===choice) b.classList.add('selected'); });
   const r=document.getElementById('patternResult');
   r.className='result-panel '+(ok?'correct':'wrong');
   r.style.display='block';
-  r.innerHTML=`<div class="result-verdict ${ok?'correct':'wrong'}">${ok?'✓ 正解！いい判断です':'✗ 惜しい！でも練習なのでOK'}</div><div class="result-detail"><b>正解：</b>${label(p.answer)}<br><b>解説：</b>${p.text}</div>`;
+  r.innerHTML=`<div class="result-verdict ${ok?'correct':'wrong'}">${ok?'✓ 正解！いい判断です':'✗ 惜しい！でも練習なのでOK'}</div><div class="result-detail"><b>正解：</b>${label(p.answer)}<br><b>解説：</b>${p.text}</div>${ok?comboEncouragement(comboStreak):''}`;
   document.getElementById('patternNext').style.display='block';
 }
 
@@ -744,7 +810,9 @@ function loadTrade(){
 function makeDecision(choice){
   if(answered) return; answered=true;
   const s=scenarios[tradeIndex]; total++;
-  const ok=choice===s.correct; if(ok){ correctCount++; addXp(XP_PER_DEMO); } else if(!reviewMode&&!realChartMode) missedScenarios.push(s);
+  const ok=choice===s.correct;
+  if(ok){ correctCount++; addXp(XP_PER_DEMO); comboStreak++; } else { comboStreak=0; if(!reviewMode&&!realChartMode) missedScenarios.push(s); }
+  updateComboBadge();
   ['buy','wait','sell'].forEach(v=>{ const b=document.getElementById('dbtn-'+v); b.disabled=true; if(v===choice) b.classList.add('selected'); });
 
   let tradeHTML='';
@@ -763,7 +831,7 @@ function makeDecision(choice){
   const r=document.getElementById('demoResult');
   r.className='result-panel '+(ok?'correct':'wrong');
   r.style.display='block';
-  r.innerHTML=`<div class="result-verdict ${ok?'correct':'wrong'}">${ok?'✓ ナイス判断！':'✗ 惜しい！次で取り返そう'}</div><div class="result-detail"><b>おすすめ：</b>${label(s.correct)}　<b>あなた：</b>${label(choice)}<br><b>解説：</b>${s.reason}</div>${tradeHTML}`;
+  r.innerHTML=`<div class="result-verdict ${ok?'correct':'wrong'}">${ok?'✓ ナイス判断！':'✗ 惜しい！次で取り返そう'}</div><div class="result-detail"><b>おすすめ：</b>${label(s.correct)}　<b>あなた：</b>${label(choice)}<br><b>解説：</b>${s.reason}</div>${tradeHTML}${ok?comboEncouragement(comboStreak):''}`;
   document.getElementById('demoNext').style.display='block';
 }
 
@@ -850,8 +918,8 @@ function startReviewMode(){
   reviewMode=true; realChartMode=false;
   const op=[...missedPatterns], os=[...missedScenarios];
   missedPatterns=[]; missedScenarios=[];
-  patternQuestions=op; scenarios=os;
-  patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+  patternQuestions=sortByDifficultyAsc(op); scenarios=sortByDifficultyAsc(os);
+  patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; comboStreak=0;
   sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
   document.getElementById('ctaArea').classList.add('hidden');
   if(patternQuestions.length>0){
@@ -869,8 +937,8 @@ function startReviewMode(){
 function startRealChartMode(){
   reviewMode=false; realChartMode=true;
   patternQuestions=[];
-  scenarios=pick(ALL_SCENARIOS,5);
-  patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false;
+  scenarios=buildOrderedSet(ALL_SCENARIOS,5,[0.2,0.5,0.3]);
+  patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; comboStreak=0;
   sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
   document.getElementById('ctaArea').classList.add('hidden');
   document.getElementById('patternArea').classList.add('hidden');
@@ -881,7 +949,7 @@ function startRealChartMode(){
 // ─── Reset ───
 function resetAll(){
   makeNewSet();
-  stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; reviewMode=false; realChartMode=false; missedPatterns=[]; missedScenarios=[];
+  stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; comboStreak=0; reviewMode=false; realChartMode=false; missedPatterns=[]; missedScenarios=[];
   sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
   document.getElementById('patternArea').classList.remove('hidden');
   document.getElementById('demoArea').classList.add('hidden');
