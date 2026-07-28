@@ -163,6 +163,8 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
 .cta-primary   { background: var(--accent); color: #fff; }
 .cta-amber     { background: var(--amber); color: #0a0a0f; }
 .cta-ghost     { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+.cta-locked    { background: var(--surface2); color: var(--text3); border: 1px dashed var(--border2); opacity: 0.6; cursor: default; }
+.cta-sub       { font-size: 11px; opacity: 0.8; display: block; margin-top: 2px; font-weight: 400; }
 .cta-note      { background: #fffbeb; color: #78350f; }
 .cta-green     { background: #059669; color: #fff; }
 
@@ -255,8 +257,17 @@ svg.chart { width: 100%; display: block; border-radius: var(--radius-sm); backgr
     <span class="combo-badge hidden" id="comboBadge">🔥2連続</span>
   </div>
 
+  <!-- コース選択画面 -->
+  <div id="menuArea" class="hidden">
+    <div class="finish-card" style="text-align:center;">
+      <div class="finish-title" id="menuTitle">どのコースから始める？</div>
+      <div class="finish-sub">前回の続きからでも、はじめからでもOKです。</div>
+      <div class="cta-stack" id="menuButtons"></div>
+    </div>
+  </div>
+
   <!-- STEP1: Pattern area -->
-  <div id="patternArea">
+  <div id="patternArea" class="hidden">
     <div class="card">
       <div class="q-title" id="patternQuestion">このローソク足、どう判断する？</div>
       <div class="chart-wrap">
@@ -439,6 +450,7 @@ const NOTE_ARTICLES = [
 ];
 
 // ─── State ───
+let course='beginner'; // 'beginner' | 'intermediate' | 'premium'（コースが分かれることで進む方向を明確にする。2026-08-02追加）
 let patternQuestions=[], scenarios=[];
 let patternIndex=0, tradeIndex=0;
 let cash=300000, wins=0, losses=0, total=0, correctCount=0;
@@ -468,6 +480,21 @@ function loadProgress(){
 function saveProgress(){
   try{ localStorage.setItem(PROGRESS_KEY, JSON.stringify(PROGRESS)); }catch(e){}
 }
+
+// ─── コース進捗（初級/中級クリア状態の保存。2026-08-02追加） ───
+const COURSE_KEY='chartTrainingCourseProgress_v1';
+const BEGINNER_CLEAR_RATE=70; // 初級→中級の解放ライン
+let COURSE_PROGRESS={ beginnerCleared:false, beginnerBestRate:0, intermediateCleared:false, intermediateBestRate:0 };
+function loadCourseProgress(){
+  try{
+    const raw=localStorage.getItem(COURSE_KEY);
+    if(raw) COURSE_PROGRESS=Object.assign(COURSE_PROGRESS, JSON.parse(raw));
+  }catch(e){ /* 読み込めない場合は初期値のまま進める */ }
+}
+function saveCourseProgress(){
+  try{ localStorage.setItem(COURSE_KEY, JSON.stringify(COURSE_PROGRESS)); }catch(e){}
+}
+function courseLabel(c){ return c==='beginner'?'初級':c==='intermediate'?'中級':c==='premium'?'上級':''; }
 function computeLevel(totalXp){
   let lv=1;
   for(const th of LEVEL_THRESHOLDS){ if(totalXp>=th) lv++; else break; }
@@ -539,39 +566,70 @@ function pick(a,n){ return shuffle(a).slice(0,n); }
 function label(v){ return v==='buy'?'上がる':v==='sell'?'下がる':'わからない'; }
 
 // ─── 出題順の難易度設計（2026-08-01追加） ───
-// 「やさしい→ふつう→むずかしい」の順に並べることで、序盤に正解体験を積んで自信をつけ、
-// そのまま勢いよく次へ次へと進めるようにする。同じ難易度内はランダムに混ぜる。
-function buildOrderedSet(all, n, ratios){
-  const tiers = { 1:[], 2:[], 3:[] };
-  all.forEach(item=>{ (tiers[item.difficulty||2]).push(item); });
-  const shuffledTiers = { 1:shuffle(tiers[1]), 2:shuffle(tiers[2]), 3:shuffle(tiers[3]) };
-
-  let counts = [Math.round(n*ratios[0]), Math.round(n*ratios[1]), Math.round(n*ratios[2])];
-  counts[1] += n - counts.reduce((a,b)=>a+b,0); // 端数はふつう難易度で吸収
-
-  const result = [];
-  [1,2,3].forEach((d,idx)=>{
-    const take = Math.max(0, Math.min(counts[idx], shuffledTiers[d].length));
-    result.push(...shuffledTiers[d].slice(0, take));
-  });
-
-  // 難易度の偏りでnに満たない場合は残りから補充
-  if(result.length < n){
-    const used = new Set(result.map(x=>x.name));
-    const leftover = shuffle(all.filter(x=>!used.has(x.name)));
-    result.push(...leftover.slice(0, n-result.length));
-  }
-  return result;
-}
-function makeNewSet(){
-  patternQuestions = buildOrderedSet(ALL_PATTERN_QUESTIONS, 10, [0.3,0.45,0.25]);
-  scenarios = buildOrderedSet(ALL_SCENARIOS, 10, [0.3,0.5,0.2]);
-}
-// 復習モード用：件数固定の配分ではなく、手元にある問題を難易度昇順に並べるだけ
+// コースごとに難易度プールをそのまま出題するため、混合セット生成は不要になった。
+// 復習モード用：手元にある問題を「やさしい→むずかしい」の順に並べ替える。
 function sortByDifficultyAsc(arr){
   const tiers = { 1:[], 2:[], 3:[] };
   arr.forEach(item=>{ (tiers[item.difficulty||2]).push(item); });
   return [...shuffle(tiers[1]), ...shuffle(tiers[2]), ...shuffle(tiers[3])];
+}
+
+// ─── コース制御（初級→中級→上級。2026-08-02追加） ───
+function hideAllAreas(){
+  document.getElementById('menuArea').classList.add('hidden');
+  document.getElementById('patternArea').classList.add('hidden');
+  document.getElementById('demoArea').classList.add('hidden');
+  document.getElementById('ctaArea').classList.add('hidden');
+}
+function startCourse(name){
+  course=name;
+  reviewMode=false; realChartMode=(name==='premium');
+  missedPatterns=[]; missedScenarios=[];
+  patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; comboStreak=0;
+  sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
+
+  if(name==='beginner'){
+    patternQuestions=shuffle(ALL_PATTERN_QUESTIONS.filter(x=>x.difficulty===1));
+    scenarios=shuffle(ALL_SCENARIOS.filter(x=>x.difficulty===1));
+  } else if(name==='intermediate'){
+    patternQuestions=shuffle(ALL_PATTERN_QUESTIONS.filter(x=>x.difficulty===2));
+    scenarios=shuffle(ALL_SCENARIOS.filter(x=>x.difficulty===2));
+  } else { // premium
+    patternQuestions=[];
+    scenarios=shuffle(ALL_SCENARIOS.filter(x=>x.difficulty===3));
+  }
+
+  hideAllAreas();
+  if(patternQuestions.length>0){
+    document.getElementById('patternArea').classList.remove('hidden');
+    loadPattern();
+  } else {
+    startDemo();
+  }
+}
+function showMenu(){
+  reviewMode=false;
+  hideAllAreas();
+  document.getElementById('menuArea').classList.remove('hidden');
+  renderMenu();
+  window.scrollTo({top:0,behavior:'auto'});
+}
+function renderMenu(){
+  const beginnerDone=COURSE_PROGRESS.beginnerCleared;
+  const intermediateDone=COURSE_PROGRESS.intermediateCleared;
+  let html='';
+  html+=`<button class="cta-btn cta-primary" onclick="startCourse('beginner')">🔰 初級から始める${beginnerDone?`<span class="cta-sub">✓クリア済み・自己ベスト${COURSE_PROGRESS.beginnerBestRate}%</span>`:''}</button>`;
+  if(beginnerDone){
+    html+=`<button class="cta-btn cta-green" onclick="startCourse('intermediate')">📈 中級から始める${intermediateDone?`<span class="cta-sub">✓クリア済み・自己ベスト${COURSE_PROGRESS.intermediateBestRate}%</span>`:''}</button>`;
+  } else {
+    html+=`<div class="cta-btn cta-locked">🔒 中級（初級を正答率${BEGINNER_CLEAR_RATE}%以上でクリアすると解放）</div>`;
+  }
+  if(intermediateDone){
+    html+=`<button class="cta-btn cta-amber" onclick="startCourse('premium')">🚀 実践プレミアム（上級）</button>`;
+  } else {
+    html+=`<div class="cta-btn cta-locked">🔒 実践プレミアム（中級クリアで解放）</div>`;
+  }
+  document.getElementById('menuButtons').innerHTML=html;
 }
 
 // ─── 隠し機能：STEP1バッジを5回連続タップで結果画面へジャンプ ───
@@ -602,7 +660,9 @@ function updateHeader(){
   document.getElementById('progressFill').style.width=(now/Math.max(1,max)*100)+'%';
   document.getElementById('progressLabel').textContent=now+' / '+max;
   document.getElementById('rateBadge').textContent='正答率 '+(total?Math.round(correctCount/total*100):0)+'%';
-  const label2 = realChartMode?'PREMIUM':reviewMode?'REVIEW':(stage==='pattern'?'STEP 1':stage==='demo'?'STEP 2':'FINISH');
+  let label2;
+  if(stage==='finish'){ label2='FINISH'; }
+  else { label2 = reviewMode ? `${courseLabel(course)}復習` : `${courseLabel(course)} ${stage==='pattern'?'STEP1':'STEP2'}`; }
   document.getElementById('stepBadge').textContent=label2;
 }
 
@@ -858,15 +918,17 @@ function showCta(){
   renderHeaderLevel();
   renderLevelBanner();
 
-  document.getElementById('finishTitle').textContent=reviewMode?'復習完了！':realChartMode?'実践完了！':'練習完了！';
+  const courseName=courseLabel(course);
+  document.getElementById('finishTitle').textContent=reviewMode?`${courseName}復習完了！`:`${courseName}コース完了！`;
   document.getElementById('finishSub').textContent=`判断正答率 ${rate}%　勝敗 ${wins}勝${losses}敗`;
   document.getElementById('statRate').textContent=rate+'%';
   document.getElementById('statWL').textContent=`${wins}-${losses}`;
   document.getElementById('statCash').textContent=money(cash);
 
-  // メインCTA（一から特訓する）→ 苦手復習の前に
+  // メインCTA：同じコースをもう一度 / コース選択に戻る
   document.getElementById('ctaButtons').innerHTML=`
-    <button class="cta-btn cta-primary" onclick="resetAll()">🔥 一から特訓する</button>`;
+    <button class="cta-btn cta-primary" onclick="startCourse('${course}')">🔄 ${courseName}をもう一度</button>
+    <button class="cta-btn cta-ghost" onclick="showMenu()">📋 コース選択に戻る</button>`;
 
   // 苦手復習パネル
   const missCount=missedPatterns.length+missedScenarios.length;
@@ -874,37 +936,62 @@ function showCta(){
   if(!reviewMode && missCount>0){
     reviewEl.classList.remove('hidden');
     document.getElementById('reviewTitle').textContent=`苦手問題を復習しよう（${missCount}問）`;
-    document.getElementById('reviewSub').textContent='間違えた問題だけを繰り返すと、正答率80%超えを狙いやすくなります。';
+    document.getElementById('reviewSub').textContent='間違えた問題だけを繰り返すと、次のステップに進みやすくなります。';
     document.getElementById('reviewButtons').innerHTML=`<button class="cta-btn cta-ghost" onclick="startReviewMode()">苦手だけ復習する →</button>`;
   } else {
     reviewEl.classList.add('hidden');
   }
 
-  // 80%解放パネル
+  // コース解放パネル（初級→中級→上級／NOTE）
   const unlockEl=document.getElementById('unlockPanel');
   const unlockBtns=document.getElementById('unlockButtons');
-  unlockEl.classList.remove('hidden');
 
-  if(rate>=80){
+  if(reviewMode){
+    // 復習中はコース進捗を動かさない
+    unlockEl.classList.add('hidden');
+  } else if(course==='beginner'){
+    unlockEl.classList.remove('hidden');
+    if(rate>COURSE_PROGRESS.beginnerBestRate) COURSE_PROGRESS.beginnerBestRate=rate;
+    if(rate>=BEGINNER_CLEAR_RATE){
+      COURSE_PROGRESS.beginnerCleared=true;
+      saveCourseProgress();
+      unlockEl.className='unlock-panel';
+      document.getElementById('unlockIcon').textContent='🎉';
+      document.getElementById('unlockTitle').textContent='中級が解放されました！';
+      document.getElementById('unlockSub').textContent='初級お疲れさまでした。中級では、もう少し複雑な形の判断に挑戦します。';
+      unlockBtns.innerHTML=`<button class="cta-btn cta-green" onclick="startCourse('intermediate')">📈 中級へ進む</button>`;
+    } else {
+      saveCourseProgress();
+      unlockEl.className='unlock-panel locked';
+      document.getElementById('unlockIcon').textContent='🔒';
+      document.getElementById('unlockTitle').textContent=`中級は正答率${BEGINNER_CLEAR_RATE}%以上で解放（現在${rate}%）`;
+      document.getElementById('unlockSub').textContent='苦手問題を復習してから、もう一度初級に挑戦してみましょう。';
+      unlockBtns.innerHTML='';
+    }
+  } else if(course==='intermediate'){
+    unlockEl.classList.remove('hidden');
+    if(rate>COURSE_PROGRESS.intermediateBestRate) COURSE_PROGRESS.intermediateBestRate=rate;
+    COURSE_PROGRESS.intermediateCleared=true;
+    saveCourseProgress();
     unlockEl.className='unlock-panel';
     document.getElementById('unlockIcon').textContent='🎉';
-    document.getElementById('unlockTitle').textContent='正答率80%以上！実践プレミアム解放';
-    document.getElementById('unlockSub').textContent='チャートの見方が身についてきました。黒背景＋価格帯別出来高つきの実践モードで、より本番に近い練習へ進みましょう。';
+    document.getElementById('unlockTitle').textContent='中級クリア！次はどちらに進む？';
+    document.getElementById('unlockSub').textContent='より本番に近いチャートで練習するか、noteで知識を深めるか選べます。どちらもあとから選び直せます。';
     unlockBtns.innerHTML=`
-      <button class="cta-btn cta-green" onclick="startRealChartMode()">🚀 実践プレミアムへ進む</button>`;
+      <button class="cta-btn cta-green" onclick="startCourse('premium')">🚀 実践プレミアム（上級）へ</button>
+      <a class="cta-btn cta-note" href="https://note.com/route_365jp" target="_blank" rel="noopener">📝 noteでさらに学ぶ →</a>`;
   } else {
-    unlockEl.className='unlock-panel locked';
-    document.getElementById('unlockIcon').textContent='🔒';
-    document.getElementById('unlockTitle').textContent=`実践プレミアムは正答率80%以上で解放（現在${rate}%）`;
-    document.getElementById('unlockSub').textContent='苦手問題を繰り返して80%以上を目指しましょう。解放されると黒背景＋価格帯別出来高つきの本格チャートで練習できます。';
-    unlockBtns.innerHTML='';
+    // premium
+    unlockEl.classList.remove('hidden');
+    unlockEl.className='unlock-panel';
+    document.getElementById('unlockIcon').textContent='🏆';
+    document.getElementById('unlockTitle').textContent='全コース完了！お疲れさまでした';
+    document.getElementById('unlockSub').textContent='ここまでの練習を活かして、実際のチャートでも同じ視点で観察してみましょう。';
+    unlockBtns.innerHTML=`<a class="cta-btn cta-note" href="https://note.com/route_365jp" target="_blank" rel="noopener">📝 noteでさらに学ぶ →</a>`;
   }
 
-  // note記事（80%解放時はnoteリンクを目立たせる）
-  const noteMain = rate>=80
-    ? `<a class="cta-btn cta-note" href="https://note.com/route_365jp" target="_blank" rel="noopener" style="margin-bottom:14px;display:block;text-align:center;font-weight:700;">📝 noteで実践知識を深める →</a>`
-    : '';
-  document.getElementById('noteArticles').innerHTML= noteMain + shuffle(NOTE_ARTICLES).slice(0,3).map(a=>`
+  // note記事一覧
+  document.getElementById('noteArticles').innerHTML= shuffle(NOTE_ARTICLES).slice(0,3).map(a=>`
     <a class="article-item" href="${a.url}" target="_blank" rel="noopener">
       <span class="article-item-title">${a.title}</span>
       <span class="article-item-desc">${a.desc}</span>
@@ -915,7 +1002,7 @@ function showCta(){
 
 // ─── Review mode ───
 function startReviewMode(){
-  reviewMode=true; realChartMode=false;
+  reviewMode=true;
   const op=[...missedPatterns], os=[...missedScenarios];
   missedPatterns=[]; missedScenarios=[];
   patternQuestions=sortByDifficultyAsc(op); scenarios=sortByDifficultyAsc(os);
@@ -929,39 +1016,19 @@ function startReviewMode(){
   } else if(scenarios.length>0){
     startDemo();
   } else {
-    resetAll();
+    startCourse(course);
   }
 }
 
-// ─── Premium mode ───
-function startRealChartMode(){
-  reviewMode=false; realChartMode=true;
-  patternQuestions=[];
-  scenarios=buildOrderedSet(ALL_SCENARIOS,5,[0.2,0.5,0.3]);
-  patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; comboStreak=0;
-  sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
-  document.getElementById('ctaArea').classList.add('hidden');
-  document.getElementById('patternArea').classList.add('hidden');
-  document.getElementById('demoArea').classList.remove('hidden');
-  startDemo();
-}
-
-// ─── Reset ───
-function resetAll(){
-  makeNewSet();
-  stage='pattern'; patternIndex=0; tradeIndex=0; cash=300000; wins=0; losses=0; total=0; correctCount=0; answered=false; comboStreak=0; reviewMode=false; realChartMode=false; missedPatterns=[]; missedScenarios=[];
-  sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
-  document.getElementById('patternArea').classList.remove('hidden');
-  document.getElementById('demoArea').classList.add('hidden');
-  document.getElementById('ctaArea').classList.add('hidden');
-  loadPattern();
-}
-
 loadProgress();
+loadCourseProgress();
 renderHeaderLevel();
 sessionXpGained=0; sessionLevelUp=false; sessionStartLevel=computeLevel(PROGRESS.totalXp);
-makeNewSet();
-loadPattern();
+if(COURSE_PROGRESS.beginnerCleared || COURSE_PROGRESS.intermediateCleared){
+  showMenu();
+} else {
+  startCourse('beginner');
+}
 </script>
 </body>
 </html>
