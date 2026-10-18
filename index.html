@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>株初心者向け ローソク足特訓</title>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -857,7 +861,7 @@ function startDemo(){
 function loadTrade(){
   answered=false; stage='demo'; updateHeader();
   const s=scenarios[tradeIndex]; currentData=makePrices(s);
-  document.getElementById('demoQuestion').textContent=realChartMode?`実践${tradeIndex+1}：価格帯別出来高も見て判断しよう`:`チャート${tradeIndex+1}：右端でどう判断する？`;
+  document.getElementById('demoQuestion').textContent=realChartMode?`実践${tradeIndex+1}：価格帯別出来高も見て判断しよう`:`���ャート${tradeIndex+1}：右端でどう判断する？`;
   document.getElementById('premiumInfo').classList.toggle('hidden',!realChartMode);
   document.getElementById('demoCaption').textContent=realChartMode?'水色＝5日線　橙＝25日線　右側＝価格帯別出来高　下：出来高　赤縦線＝判断日':'青＝5日線　橙＝25日線　下：出来高　赤縦線＝判断日';
   document.getElementById('demoResult').style.display='none';
