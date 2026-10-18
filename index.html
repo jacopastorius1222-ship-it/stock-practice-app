@@ -861,7 +861,7 @@ function startDemo(){
 function loadTrade(){
   answered=false; stage='demo'; updateHeader();
   const s=scenarios[tradeIndex]; currentData=makePrices(s);
-  document.getElementById('demoQuestion').textContent=realChartMode?`実践${tradeIndex+1}：価格帯別出来高も見て判断しよう`:`���ャート${tradeIndex+1}：右端でどう判断する？`;
+  document.getElementById('demoQuestion').textContent=realChartMode?`実践${tradeIndex+1}：価格帯別出来高も見て判断しよう`:`チャート${tradeIndex+1}：右端でどう判断する？`;
   document.getElementById('premiumInfo').classList.toggle('hidden',!realChartMode);
   document.getElementById('demoCaption').textContent=realChartMode?'水色＝5日線　橙＝25日線　右側＝価格帯別出来高　下：出来高　赤縦線＝判断日':'青＝5日線　橙＝25日線　下：出来高　赤縦線＝判断日';
   document.getElementById('demoResult').style.display='none';
