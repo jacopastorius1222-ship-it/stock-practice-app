@@ -1,0 +1,19 @@
+{
+  "name": "stock-practice-app",
+  "version": "1.0.0",
+  "description": "Stock practice app with candlestick charts",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static HTML - no build needed'"
+  },
+  "keywords": [
+    "stock",
+    "practice",
+    "candlestick"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
